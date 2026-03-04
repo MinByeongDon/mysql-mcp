@@ -5,6 +5,18 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.34.0] - 2026-03-04
+
+### Removed
+- **REST API Server**: Removed `src/server.ts` and all REST API functionality to reduce bundle size and simplify the codebase
+- Removed unused dependencies: `express`, `cors`, `helmet`, `morgan`, `express-rate-limit`, `jsonwebtoken`
+- Removed unused devDependencies: `@types/cors`, `@types/express`, `@types/helmet`, `@types/morgan`, `@types/jsonwebtoken`
+- Removed npm scripts: `start:mcp`, `start:api`, `dev:mcp`, `dev:api` (consolidated to `start` and `dev`)
+- This reduces the package size and attack surface, focusing purely on MCP protocol via stdio
+
+### Changed
+- Simplified npm scripts: `start` now runs `mcp-server.js`, `dev` now runs `mcp-server.ts`
+
 ## [1.33.6] - 2026-01-25
 
 ### Documentation
