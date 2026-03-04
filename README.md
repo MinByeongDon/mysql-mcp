@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-03-04 00:00:00
+**Last Updated:** 2026-03-04 12:00:00
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -268,13 +268,12 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
 | `data_migration` | Migrate data between databases or systems | `clone_table, compare_table_structure, copy_table_data, move_table_data, sync_table_data` |
 | `schema_migrations` | Version control for database schema changes | `apply_migrations, create_migration, generate_migration_from_diff, get_migration_status, get_schema_version, init_migrations_table, reset_failed_migration, rollback_migration, validate_migrations` |
 | `analysis` | Data analysis and reporting tools | `get_column_statistics, get_database_summary, get_schema_erd, get_schema_rag_context` |
-| `ai_enhancement` | AI-powered features and smart automation | `analyze_schema_patterns, audit_database_security, build_query_from_intent, design_schema_from_requirements, discover_data_patterns, find_similar_columns, forecast_database_growth, generate_business_glossary, generate_data_dictionary, generate_documentation, generate_test_data, predict_query_performance, recommend_indexes, smart_search, suggest_query_improvements, visualize_query` |
 
 <details>
   <summary>Copy/paste list (comma-separated, no spaces)</summary>
 
 ```text
-database_discovery,crud_operations,bulk_operations,custom_queries,schema_management,utilities,transaction_management,stored_procedures,views_management,triggers_management,functions_management,index_management,constraint_management,table_maintenance,server_management,performance_monitoring,cache_management,query_optimization,backup_restore,import_export,data_migration,schema_migrations,analysis,ai_enhancement
+database_discovery,crud_operations,bulk_operations,custom_queries,schema_management,utilities,transaction_management,stored_procedures,views_management,triggers_management,functions_management,index_management,constraint_management,table_maintenance,server_management,performance_monitoring,cache_management,query_optimization,backup_restore,import_export,data_migration,schema_migrations,analysis
 ```
 
 </details>
@@ -285,14 +284,9 @@ Full category → tool mapping (and examples) lives in **[DOCUMENTATIONS.md → 
 
 ## Available Tools
 
-The server exposes **150 tools** organized into categories (CRUD, schema, backups, migrations, perf/monitoring, and AI enhancement).
+The server exposes **134 tools** organized into categories (CRUD, schema, backups, migrations, and perf/monitoring).
 
 - Complete list of tools: **[DOCUMENTATIONS.md → Complete Tools Reference](DOCUMENTATIONS.md#🔧-complete-tools-reference)**
-- AI enhancement tools overview: **[DOCUMENTATIONS.md → AI Enhancement Tools](DOCUMENTATIONS.md#🤖-ai-enhancement-tools)**
-
-### 🤖 AI Enhancement Tools
-
-The full **Phase 1–3 (implemented)** overview, examples, and per-tool documentation lives in **[DOCUMENTATIONS.md](DOCUMENTATIONS.md#🤖-ai-enhancement-tools)**.
 
 ---
 
@@ -308,7 +302,6 @@ For comprehensive documentation, see **[DOCUMENTATIONS.md](DOCUMENTATIONS.md)**:
 - **Schema Versioning** - Version control for database schema changes
 - **Transaction Management** - ACID transactions
 - **Stored Procedures** - Create and execute with IN/OUT/INOUT parameters
-- **🤖 AI Enhancement** - Natural language to SQL, smart data discovery, schema design, security audit, index recommendations, data generation, visualization, and forecasting (Phase 1-3)
 - **Query Logging** - See all SQL queries executed automatically
 - **Security Features** - Built-in security and best practices
 - **Bulk Operations** - High-performance batch processing

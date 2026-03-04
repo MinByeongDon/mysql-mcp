@@ -487,11 +487,21 @@
                     "items": {
                       "type": "object",
                       "properties": {
-                        "child_table": { "type": "string" },
-                        "child_column": { "type": "string" },
-                        "parent_table": { "type": "string" },
-                        "parent_column": { "type": "string" },
-                        "constraint_name": { "type": "string" }
+                        "child_table": {
+                          "type": "string"
+                        },
+                        "child_column": {
+                          "type": "string"
+                        },
+                        "parent_table": {
+                          "type": "string"
+                        },
+                        "parent_column": {
+                          "type": "string"
+                        },
+                        "constraint_name": {
+                          "type": "string"
+                        }
                       }
                     }
                   },
@@ -500,11 +510,21 @@
                     "items": {
                       "type": "object",
                       "properties": {
-                        "child_table": { "type": "string" },
-                        "child_column": { "type": "string" },
-                        "parent_table": { "type": "string" },
-                        "parent_column": { "type": "string" },
-                        "constraint_name": { "type": "string" }
+                        "child_table": {
+                          "type": "string"
+                        },
+                        "child_column": {
+                          "type": "string"
+                        },
+                        "parent_table": {
+                          "type": "string"
+                        },
+                        "parent_column": {
+                          "type": "string"
+                        },
+                        "constraint_name": {
+                          "type": "string"
+                        }
                       }
                     }
                   }
@@ -649,194 +669,6 @@
           }
         }
       }
-    }
-    ,
-    {
-      "name": "design_schema_from_requirements",
-      "description": "Designs a database schema from natural language requirements and outputs proposed DDL (does not execute).",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "requirements_text": { "type": "string" },
-          "entities": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": { "type": "string" },
-                "fields": { "type": "array", "items": { "type": "string" } }
-              },
-              "required": ["name"]
-            }
-          },
-          "naming_convention": { "type": "string", "enum": ["snake_case", "camelCase"] },
-          "include_audit_columns": { "type": "boolean" },
-          "id_type": { "type": "string", "enum": ["BIGINT", "UUID"] },
-          "engine": { "type": "string" },
-          "charset": { "type": "string" },
-          "collation": { "type": "string" }
-        },
-        "required": ["requirements_text"]
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "status": { "type": "string" },
-          "data": { "type": "object" },
-          "error": { "type": ["string", "null"] }
-        }
-      }
-    },
-    {
-      "name": "audit_database_security",
-      "description": "Audits MySQL security configuration and (optionally) accounts/privileges using read-only inspection queries.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "database": { "type": "string" },
-          "include_user_account_checks": { "type": "boolean" },
-          "include_privilege_checks": { "type": "boolean" }
-        }
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "status": { "type": "string" },
-          "data": { "type": "object" },
-          "error": { "type": ["string", "null"] }
-        }
-      }
-    },
-    {
-      "name": "recommend_indexes",
-      "description": "Analyzes performance_schema query digests and suggests concrete CREATE INDEX statements.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "database": { "type": "string" },
-          "max_query_patterns": { "type": "number" },
-          "max_recommendations": { "type": "number" },
-          "min_execution_count": { "type": "number" },
-          "min_avg_time_ms": { "type": "number" },
-          "include_unused_index_warnings": { "type": "boolean" }
-        }
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "status": { "type": "string" },
-          "data": { "type": "object" },
-          "error": { "type": ["string", "null"] }
-        }
-      }
-    },
-    {
-      "name": "generate_test_data",
-      "description": "Generates synthetic test data as SQL INSERT statements for a given table (does not execute). Attempts FK-aware value selection for referential integrity.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "table_name": { "type": "string" },
-          "row_count": { "type": "number" },
-          "batch_size": { "type": "number" },
-          "include_nulls": { "type": "boolean" },
-          "database": { "type": "string" }
-        },
-        "required": ["table_name", "row_count"]
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "status": { "type": "string" },
-          "data": { "type": "object" },
-          "error": { "type": ["string", "null"] }
-        }
-      }
-    },
-    {
-      "name": "analyze_schema_patterns",
-      "description": "Analyzes the schema for common patterns and anti-patterns (missing PKs, wide tables, unindexed FKs, EAV-like tables, etc.) and returns recommendations.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "scope": { "type": "string", "enum": ["database", "table"] },
-          "table_name": { "type": "string" },
-          "database": { "type": "string" }
-        }
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "status": { "type": "string" },
-          "data": { "type": "object" },
-          "error": { "type": ["string", "null"] }
-        }
-      }
-    },
-    {
-      "name": "visualize_query",
-      "description": "Creates a visual representation of a read-only SQL query as a Mermaid flowchart, based on EXPLAIN FORMAT=JSON and lightweight SQL parsing.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "query": { "type": "string" },
-          "include_explain_json": { "type": "boolean" },
-          "format": { "type": "string", "enum": ["mermaid", "json", "both"] }
-        },
-        "required": ["query"]
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "status": { "type": "string" },
-          "data": { "type": "object" },
-          "error": { "type": ["string", "null"] }
-        }
-      }
-    },
-    {
-      "name": "predict_query_performance",
-      "description": "Predicts how EXPLAIN-estimated scan volume/cost could change under table growth assumptions (heuristic).",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "query": { "type": "string" },
-          "row_growth_multiplier": { "type": "number" },
-          "per_table_row_growth": { "type": "object" },
-          "include_explain_json": { "type": "boolean" }
-        },
-        "required": ["query"]
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "status": { "type": "string" },
-          "data": { "type": "object" },
-          "error": { "type": ["string", "null"] }
-        }
-      }
-    },
-    {
-      "name": "forecast_database_growth",
-      "description": "Forecasts database/table growth based on current INFORMATION_SCHEMA sizes and user-supplied growth rate assumptions.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "horizon_days": { "type": "number" },
-          "growth_rate_percent_per_day": { "type": "number" },
-          "growth_rate_percent_per_month": { "type": "number" },
-          "per_table_growth_rate_percent_per_day": { "type": "object" },
-          "database": { "type": "string" }
-        }
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "status": { "type": "string" },
-          "data": { "type": "object" },
-          "error": { "type": ["string", "null"] }
-        }
-      }
     },
     {
       "name": "list_all_tools",
@@ -848,29 +680,52 @@
       "output_schema": {
         "type": "object",
         "properties": {
-          "status": { "type": "string" },
+          "status": {
+            "type": "string"
+          },
           "data": {
             "type": "object",
             "properties": {
-              "total_tools": { "type": "number" },
-              "server_name": { "type": "string" },
-              "server_version": { "type": "string" },
-              "server_description": { "type": "string" },
+              "total_tools": {
+                "type": "number"
+              },
+              "server_name": {
+                "type": "string"
+              },
+              "server_version": {
+                "type": "string"
+              },
+              "server_description": {
+                "type": "string"
+              },
               "tools": {
                 "type": "array",
                 "items": {
                   "type": "object",
                   "properties": {
-                    "name": { "type": "string" },
-                    "description": { "type": "string" },
-                    "input_schema": { "type": "object" },
-                    "output_schema": { "type": "object" }
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "input_schema": {
+                      "type": "object"
+                    },
+                    "output_schema": {
+                      "type": "object"
+                    }
                   }
                 }
               }
             }
           },
-          "error": { "type": ["string", "null"] }
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         }
       }
     }

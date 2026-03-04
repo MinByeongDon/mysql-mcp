@@ -20,16 +20,6 @@ import { PerformanceTools } from "./tools/performanceTools";
 import { AnalysisTools } from "./tools/analysisTools";
 import { AiTools } from "./tools/aiTools";
 import { MacroTools } from "./tools/macroTools";
-import { IntelligentQueryTools } from "./tools/intelligentQueryTools";
-import { SmartDiscoveryTools } from "./tools/smartDiscoveryTools";
-import { DocumentationGeneratorTools } from "./tools/documentationGeneratorTools";
-import { SchemaDesignTools } from "./tools/schemaDesignTools";
-import { SecurityAuditTools } from "./tools/securityAuditTools";
-import { IndexRecommendationTools } from "./tools/indexRecommendationTools";
-import { TestDataTools } from "./tools/testDataTools";
-import { SchemaPatternTools } from "./tools/schemaPatternTools";
-import { QueryVisualizationTools } from "./tools/queryVisualizationTools";
-import { ForecastingTools } from "./tools/forecastingTools";
 import { SmartQueryBuilderTools } from "./tools/smartQueryBuilderTools";
 import { FulltextSearchTools } from "./tools/fulltextSearchTools";
 import SecurityLayer from "./security/securityLayer";
@@ -63,16 +53,6 @@ export class MySQLMCP {
   private analysisTools: AnalysisTools;
   private aiTools: AiTools;
   private macroTools: MacroTools;
-  private intelligentQueryTools: IntelligentQueryTools;
-  private smartDiscoveryTools: SmartDiscoveryTools;
-  private documentationGeneratorTools: DocumentationGeneratorTools;
-  private schemaDesignTools: SchemaDesignTools;
-  private securityAuditTools: SecurityAuditTools;
-  private indexRecommendationTools: IndexRecommendationTools;
-  private testDataTools: TestDataTools;
-  private schemaPatternTools: SchemaPatternTools;
-  private queryVisualizationTools: QueryVisualizationTools;
-  private forecastingTools: ForecastingTools;
   private smartQueryBuilderTools: SmartQueryBuilderTools;
   private fulltextSearchTools: FulltextSearchTools;
   private security: SecurityLayer;
@@ -104,18 +84,6 @@ export class MySQLMCP {
     this.analysisTools = new AnalysisTools(this.security);
     this.aiTools = new AiTools(this.security);
     this.macroTools = new MacroTools(this.security);
-    this.intelligentQueryTools = new IntelligentQueryTools(this.security);
-    this.smartDiscoveryTools = new SmartDiscoveryTools(this.security);
-    this.documentationGeneratorTools = new DocumentationGeneratorTools(
-      this.security,
-    );
-    this.schemaDesignTools = new SchemaDesignTools(this.security);
-    this.securityAuditTools = new SecurityAuditTools();
-    this.indexRecommendationTools = new IndexRecommendationTools(this.security);
-    this.testDataTools = new TestDataTools(this.security);
-    this.schemaPatternTools = new SchemaPatternTools(this.security);
-    this.queryVisualizationTools = new QueryVisualizationTools(this.security);
-    this.forecastingTools = new ForecastingTools(this.security);
     this.smartQueryBuilderTools = new SmartQueryBuilderTools(this.security);
     this.fulltextSearchTools = new FulltextSearchTools(this.security);
   }
@@ -1502,211 +1470,6 @@ export class MySQLMCP {
     const check = this.checkToolEnabled("resetPerformanceStats");
     if (!check.enabled) return { status: "error", error: check.error };
     return await this.performanceTools.resetPerformanceStats();
-  }
-
-  // ==========================================
-  // PHASE 1: AI Enhancement Tools
-  // ==========================================
-
-  // Intelligent Query Assistant
-  async buildQueryFromIntent(params: {
-    natural_language: string;
-    context?: "analytics" | "reporting" | "data_entry" | "schema_exploration";
-    max_complexity?: "simple" | "medium" | "complex";
-    safety_level?: "strict" | "moderate" | "permissive";
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("buildQueryFromIntent");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.intelligentQueryTools.buildQueryFromIntent(params);
-  }
-
-  async suggestQueryImprovements(params: {
-    query: string;
-    optimization_goal?: "speed" | "memory" | "readability";
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("suggestQueryImprovements");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.intelligentQueryTools.suggestQueryImprovements(params);
-  }
-
-  // Smart Data Discovery
-  async smartSearch(params: {
-    search_term: string;
-    search_type?: "column" | "table" | "data_pattern" | "relationship" | "all";
-    similarity_threshold?: number;
-    include_sample_data?: boolean;
-    max_results?: number;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("smartSearch");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.smartDiscoveryTools.smartSearch(params);
-  }
-
-  async findSimilarColumns(params: {
-    column_name?: string;
-    table_name?: string;
-    include_data_comparison?: boolean;
-    max_results?: number;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("findSimilarColumns");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.smartDiscoveryTools.findSimilarColumns(params);
-  }
-
-  async discoverDataPatterns(params: {
-    table_name: string;
-    pattern_types?: Array<"unique" | "null" | "duplicate" | "format" | "range">;
-    max_columns?: number;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("discoverDataPatterns");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.smartDiscoveryTools.discoverDataPatterns(params);
-  }
-
-  // Documentation Generator
-  async generateDocumentation(params: {
-    scope?: "database" | "table" | "column" | "relationship";
-    table_name?: string;
-    include_business_glossary?: boolean;
-    format?: "markdown" | "html" | "json";
-    include_examples?: boolean;
-    include_statistics?: boolean;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("generateDocumentation");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.documentationGeneratorTools.generateDocumentation(params);
-  }
-
-  async generateDataDictionary(params: {
-    table_name: string;
-    include_sample_values?: boolean;
-    include_constraints?: boolean;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("generateDataDictionary");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.documentationGeneratorTools.generateDataDictionary(
-      params,
-    );
-  }
-
-  async generateBusinessGlossary(params: {
-    include_descriptions?: boolean;
-    group_by?: "table" | "category" | "alphabetical";
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("generateBusinessGlossary");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.documentationGeneratorTools.generateBusinessGlossaryReport(
-      params,
-    );
-  }
-
-  // ==========================================
-  // PHASE 2: AI Enhancement Tools (Schema + Security + Indexing)
-  // ==========================================
-
-  async designSchemaFromRequirements(params: {
-    requirements_text: string;
-    entities?: Array<{ name: string; fields?: string[] }>;
-    naming_convention?: "snake_case" | "camelCase";
-    include_audit_columns?: boolean;
-    id_type?: "BIGINT" | "UUID";
-    engine?: string;
-    charset?: string;
-    collation?: string;
-  }) {
-    const check = this.checkToolEnabled("designSchemaFromRequirements");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.schemaDesignTools.designSchemaFromRequirements(params);
-  }
-
-  async auditDatabaseSecurity(params?: {
-    database?: string;
-    include_user_account_checks?: boolean;
-    include_privilege_checks?: boolean;
-  }) {
-    const check = this.checkToolEnabled("auditDatabaseSecurity");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.securityAuditTools.auditDatabaseSecurity(params);
-  }
-
-  async recommendIndexes(params?: {
-    database?: string;
-    max_query_patterns?: number;
-    max_recommendations?: number;
-    min_execution_count?: number;
-    min_avg_time_ms?: number;
-    include_unused_index_warnings?: boolean;
-  }) {
-    const check = this.checkToolEnabled("recommendIndexes");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.indexRecommendationTools.recommendIndexes(params);
-  }
-
-  // ==========================================
-  // PHASE 3: AI Enhancement Tools (Data Gen + Patterns + Visualization + Forecasting)
-  // ==========================================
-
-  async generateTestData(params: {
-    table_name: string;
-    row_count: number;
-    batch_size?: number;
-    include_nulls?: boolean;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("generateTestData");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.testDataTools.generateTestData(params);
-  }
-
-  async analyzeSchemaPatterns(params?: {
-    scope?: "database" | "table";
-    table_name?: string;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("analyzeSchemaPatterns");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.schemaPatternTools.analyzeSchemaPatterns(params);
-  }
-
-  async visualizeQuery(params: {
-    query: string;
-    include_explain_json?: boolean;
-    format?: "mermaid" | "json" | "both";
-  }) {
-    const check = this.checkToolEnabled("visualizeQuery");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.queryVisualizationTools.visualizeQuery(params);
-  }
-
-  async predictQueryPerformance(params: {
-    query: string;
-    row_growth_multiplier?: number;
-    per_table_row_growth?: Record<string, number>;
-    include_explain_json?: boolean;
-  }) {
-    const check = this.checkToolEnabled("predictQueryPerformance");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.forecastingTools.predictQueryPerformance(params);
-  }
-
-  async forecastDatabaseGrowth(params?: {
-    horizon_days?: number;
-    growth_rate_percent_per_day?: number;
-    growth_rate_percent_per_month?: number;
-    per_table_growth_rate_percent_per_day?: Record<string, number>;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("forecastDatabaseGrowth");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.forecastingTools.forecastDatabaseGrowth(params);
   }
 
   // Smart Query Builder Tools

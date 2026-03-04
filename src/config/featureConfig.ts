@@ -47,7 +47,6 @@ export enum DocCategory {
   DATA_MIGRATION = "data_migration",
   SCHEMA_MIGRATIONS = "schema_migrations",
   ANALYSIS = "analysis",
-  AI_ENHANCEMENT = "ai_enhancement",
 }
 
 /**
@@ -214,28 +213,6 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   getConnectionPoolStats: ToolCategory.UTILITY,
   getDatabaseHealthCheck: ToolCategory.UTILITY,
   resetPerformanceStats: ToolCategory.UTILITY,
-
-  // Phase 1: AI Enhancement Tools
-  buildQueryFromIntent: ToolCategory.READ,
-  suggestQueryImprovements: ToolCategory.UTILITY,
-  smartSearch: ToolCategory.LIST,
-  findSimilarColumns: ToolCategory.LIST,
-  discoverDataPatterns: ToolCategory.READ,
-  generateDocumentation: ToolCategory.UTILITY,
-  generateDataDictionary: ToolCategory.UTILITY,
-  generateBusinessGlossary: ToolCategory.UTILITY,
-
-  // Phase 2: AI Enhancement Tools
-  designSchemaFromRequirements: ToolCategory.UTILITY,
-  auditDatabaseSecurity: ToolCategory.UTILITY,
-  recommendIndexes: ToolCategory.UTILITY,
-
-  // Phase 3: AI Enhancement Tools
-  generateTestData: ToolCategory.UTILITY,
-  analyzeSchemaPatterns: ToolCategory.UTILITY,
-  visualizeQuery: ToolCategory.UTILITY,
-  predictQueryPerformance: ToolCategory.UTILITY,
-  forecastDatabaseGrowth: ToolCategory.UTILITY,
 
   // Full-Text Search Tools
   createFulltextIndex: ToolCategory.DDL,
@@ -422,28 +399,6 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   getSchemaERD: DocCategory.ANALYSIS,
   getColumnStatistics: DocCategory.ANALYSIS,
   getSchemaRagContext: DocCategory.ANALYSIS,
-
-  // Phase 1: AI Enhancement
-  buildQueryFromIntent: DocCategory.AI_ENHANCEMENT,
-  suggestQueryImprovements: DocCategory.AI_ENHANCEMENT,
-  smartSearch: DocCategory.AI_ENHANCEMENT,
-  findSimilarColumns: DocCategory.AI_ENHANCEMENT,
-  discoverDataPatterns: DocCategory.AI_ENHANCEMENT,
-  generateDocumentation: DocCategory.AI_ENHANCEMENT,
-  generateDataDictionary: DocCategory.AI_ENHANCEMENT,
-  generateBusinessGlossary: DocCategory.AI_ENHANCEMENT,
-
-  // Phase 2: AI Enhancement
-  designSchemaFromRequirements: DocCategory.AI_ENHANCEMENT,
-  auditDatabaseSecurity: DocCategory.AI_ENHANCEMENT,
-  recommendIndexes: DocCategory.AI_ENHANCEMENT,
-
-  // Phase 3: AI Enhancement
-  generateTestData: DocCategory.AI_ENHANCEMENT,
-  analyzeSchemaPatterns: DocCategory.AI_ENHANCEMENT,
-  visualizeQuery: DocCategory.AI_ENHANCEMENT,
-  predictQueryPerformance: DocCategory.AI_ENHANCEMENT,
-  forecastDatabaseGrowth: DocCategory.AI_ENHANCEMENT,
 
   // Full-Text Search
   createFulltextIndex: DocCategory.INDEX_MANAGEMENT,

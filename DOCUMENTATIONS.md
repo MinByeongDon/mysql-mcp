@@ -1,8 +1,8 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-03-04 00:00:00  
-**Version:** 1.34.0
-**Total Tools:** 150
+**Last Updated:** 2026-03-04 12:00:00  
+**Version:** 1.35.0
+**Total Tools:** 134
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
 
@@ -270,24 +270,6 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `validate_migrations` - Validate migration files
 - `reset_failed_migration` - Reset a failed migration
 - `generate_migration_from_diff` - Generate migration from schema diff
-
-### 24. AI Enhancement (16 tools)
-- `build_query_from_intent` - Convert natural language to SQL
-- `suggest_query_improvements` - Suggest query optimizations
-- `smart_search` - Semantic search for tables, columns, data
-- `find_similar_columns` - Find columns similar to a given column
-- `discover_data_patterns` - Discover data patterns in tables
-- `generate_documentation` - Generate database documentation
-- `generate_data_dictionary` - Generate data dictionary for tables
-- `generate_business_glossary` - Generate business glossary
-- `design_schema_from_requirements` - Design schema from requirements
-- `audit_database_security` - Audit database security
-- `recommend_indexes` - Recommend indexes for optimization
-- `generate_test_data` - Generate test data for tables
-- `analyze_schema_patterns` - Analyze schema design patterns
-- `visualize_query` - Visualize query execution plan
-- `predict_query_performance` - Predict query performance
-- `forecast_database_growth` - Forecast database growth
 
 ---
 

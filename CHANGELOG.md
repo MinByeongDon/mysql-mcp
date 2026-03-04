@@ -5,6 +5,17 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.35.0] - 2026-03-04
+
+### Removed
+- Removed AI enhancement category (`ai_enhancement`) and 16 AI tools from MCP exposure and runtime routing.
+- Removed AI enhancement tool modules: intelligent query assistant, smart discovery, documentation generator, schema design, security audit, index recommendation, test data generation, schema pattern analysis, query visualization, and forecasting tools.
+
+### Changed
+- Updated category filtering config by removing `DocCategory.AI_ENHANCEMENT` and related mappings.
+- Updated README.md and DOCUMENTATIONS.md tool/category listings and totals (150 → 134 tools).
+- Bumped package version to `1.35.0`.
+
 ## [1.34.0] - 2026-03-04
 
 ### Removed
