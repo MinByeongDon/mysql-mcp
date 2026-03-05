@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated category filtering config by removing `DocCategory.AI_ENHANCEMENT` and related mappings.
 - Updated README.md and DOCUMENTATIONS.md tool/category listings and totals (150 → 134 tools).
+- Fixed DOCUMENTATIONS.md to replace "AI-Enhanced Analysis" category with "Analysis" category to match actual code implementation.
 - Bumped package version to `1.35.0`.
 
 ## [1.34.0] - 2026-03-04

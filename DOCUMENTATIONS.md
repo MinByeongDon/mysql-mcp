@@ -99,8 +99,8 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `get_all_tables_relationships` - Get all FK relationships
 - `list_all_tools` - List available MCP tools
 
-### 2. AI-Enhanced Analysis (4 tools)
-- `get_database_summary` - AI-optimized database overview
+### 2. Analysis (4 tools)
+- `get_database_summary` - Database overview with statistics
 - `get_schema_erd` - Generate Mermaid.js ER diagram
 - `get_schema_rag_context` - Compact schema for LLM context
 - `get_column_statistics` - Column data profiling
@@ -346,9 +346,9 @@ await mcp.call("get_optimization_hints", {
 
 ## Advanced Features
 
-### AI-Enhanced Analysis
+### Analysis
 
-The server includes AI-optimized tools for intelligent database analysis:
+The server includes analysis tools for database insights:
 
 - **Database Summary**: Provides readable overviews with statistics
 - **ER Diagram Generation**: Automatic Mermaid.js diagrams
