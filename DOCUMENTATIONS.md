@@ -1,7 +1,7 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-03-06 00:00:00
-**Version:** 1.40.0
+**Last Updated:** 2026-03-06 17:30:00
+**Version:** 1.40.1
 **Total Tools:** 73
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
@@ -37,7 +37,7 @@ Configure MySQL MCP with two access-control layers:
         "@berthojoris/mcp-mysql-server",
         "mysql://user:password@localhost:3306/database",
         "list,read,utility",
-        "database_discovery,performance_monitoring"
+        "database_discovery,custom_queries,analysis"
       ]
     }
   }
@@ -58,7 +58,7 @@ Configure MySQL MCP with two access-control layers:
     "DB_PASSWORD": "your_password",
     "DB_NAME": "your_database",
     "MCP_PERMISSIONS": "list,read,utility",
-    "MCP_CATEGORIES": "database_discovery,performance_monitoring"
+    "MCP_CATEGORIES": "database_discovery,custom_queries,analysis"
   }
 }
 ```

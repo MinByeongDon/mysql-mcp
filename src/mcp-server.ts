@@ -8,18 +8,8 @@ import {
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { MySQLMCP } from "./index.js";
-import { 
-  validateCreateRecord, 
-  validateReadRecords, 
-  validateUpdateRecord, 
-  validateDeleteRecord, 
-  validateQuery, 
-  validateBulkInsert,
-  validateTableName,
-  validateFieldName,
-  validateValue,
-  validateImportFromJSON
-} from "./validation/inputValidation.js";
+import { getEnabledTools } from "./tools/toolRegistry.js";
+import { validateToolArguments } from "./tools/toolArgumentValidation.js";
 
 // Get permissions and categories from environment variables (set by bin/mcp-mysql.js)
 // Layer 1 (Permissions): MCP_PERMISSIONS or MCP_CONFIG (backward compatible)
@@ -2199,7 +2189,7 @@ const TOOLS: Tool[] = [
 const server = new Server(
   {
     name: "mysql-mcp-server",
-    version: "1.28.0",
+    version: "1.40.1",
   },
   {
     capabilities: {
@@ -2210,22 +2200,7 @@ const server = new Server(
 
 // Handle list tools request - filter tools based on permissions and categories
 server.setRequestHandler(ListToolsRequestSchema, async () => {
-  // Filter tools to only return those that are enabled based on current config
-  const enabledTools = TOOLS.filter((tool) => {
-    // Convert tool name from snake_case to camelCase for checking
-    // e.g., "list_databases" -> "listDatabases"
-    const toolNameCamelCase = tool.name.replace(/_([a-z])/g, (_, letter) =>
-      letter.toUpperCase(),
-    );
-
-    // Check if tool is enabled based on permissions and categories
-    // Most tools are keyed in featureConfig using camelCase, but a few legacy/meta tools
-    // are keyed using their snake_case MCP names (e.g., read_changelog, list_all_tools).
-    return (
-      mysqlMCP.isToolEnabled(toolNameCamelCase) ||
-      mysqlMCP.isToolEnabled(tool.name)
-    );
-  });
+  const enabledTools = getEnabledTools(mysqlMCP, TOOLS);
 
   // Log the filtering results
   console.error(
@@ -2812,50 +2787,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
     };
   }
 });
-
-// Validation function to validate tool arguments before execution
-function validateToolArguments(name: string, args: any): { valid: boolean; errors?: string[] } {
-  if (!args) return { valid: true }; // Some tools don't require arguments
-
-  try {
-    switch (name) {
-      case "create_record":
-        return validateCreateRecord(args);
-      case "read_records":
-        return validateReadRecords(args);
-      case "update_record":
-        return validateUpdateRecord(args);
-      case "delete_record":
-        return validateDeleteRecord(args);
-      case "run_select_query":
-      case "execute_write_query":
-      case "execute_ddl":
-        return validateQuery({ query: args?.query || "" });
-      case "bulk_insert":
-        return validateBulkInsert(args);
-      case "list_tables":
-      case "get_schema_erd":
-      case "get_schema_rag_context":
-      case "get_database_summary":
-        if (args.database !== undefined) {
-          const validation = validateValue(args.database);
-          if (!validation.valid) return { valid: false, errors: [validation.error || 'Invalid database name'] };
-        }
-        return { valid: true };
-      case "get_column_statistics":
-      case "read_table_schema":
-        if (args.table_name) {
-          const validation = validateTableName(args.table_name);
-          if (!validation.valid) return { valid: false, errors: [validation.error || 'Invalid table name'] };
-        }
-        return { valid: true };
-      default:
-        return { valid: true }; // For tools without specific validation
-    }
-  } catch (error) {
-    return { valid: false, errors: [`Validation error: ${error instanceof Error ? error.message : 'Unknown validation error'}`] };
-  }
-}
 
 // Start the server
 async function main() {

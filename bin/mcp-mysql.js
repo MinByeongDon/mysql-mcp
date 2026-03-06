@@ -50,7 +50,7 @@ if (!mysqlUrl) {
     "  # Dual-layer: Permissions + Categories (fine-grained control)",
   );
   console.error(
-    '  mcp-mysql mysql://root:pass@localhost:3306/mydb "list,read,utility" "database_discovery,performance_monitoring"',
+    '  mcp-mysql mysql://root:pass@localhost:3306/mydb "list,read,utility" "database_discovery,custom_queries,analysis"',
   );
   console.error("");
   console.error("Permissions (Layer 1 - Broad Control):");
@@ -69,13 +69,10 @@ if (!mysqlUrl) {
     "  views_management, triggers_management, functions_management, index_management,",
   );
   console.error(
-    "  constraint_management, table_maintenance, server_management,",
+    "  constraint_management, table_maintenance, query_optimization,",
   );
   console.error(
-    "  performance_monitoring, cache_management, query_optimization,",
-  );
-  console.error(
-    "  backup_restore, import_export, data_migration, schema_migrations",
+    "  backup_restore, analysis",
   );
   console.error("");
   console.error("Filtering Logic:");

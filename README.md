@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-03-06 16:45:00
+**Last Updated:** 2026-03-06 17:30:00
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -200,7 +200,7 @@ Alternative approach using environment variables instead of connection string:
         "DB_PASSWORD": "your_password",
         "DB_NAME": "your_database",
         "MCP_PERMISSIONS": "list,read,utility,create,update,delete",
-        "MCP_CATEGORIES": "database_discovery,performance_monitoring,custom_queries"
+        "MCP_CATEGORIES": "database_discovery,custom_queries,analysis"
       }
     }
   }
@@ -245,7 +245,7 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
 
 | Category List | Use Case | List Tools |
 |---------------|----------|-----------|
-| `database_discovery` | Explore databases, tables, and schema structure | `get_all_tables_relationships, get_table_relationships, list_databases, list_tables, read_table_schema` |
+| `database_discovery` | Explore databases, tables, and schema structure | `get_all_tables_relationships, list_databases, list_tables, read_table_schema` |
 | `crud_operations` | Create, read, update, delete operations on data | `create_record, delete_record, read_records, update_record` |
 | `bulk_operations` | High-performance batch processing operations | `bulk_delete, bulk_insert, bulk_update` |
 | `custom_queries` | Execute custom SQL queries and advanced operations | `execute_write_query, run_select_query` |

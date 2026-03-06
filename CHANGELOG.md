@@ -5,6 +5,15 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.1] - 2026-03-06
+
+### Changed
+- Synchronized version metadata across `package.json`, `src/mcp-server.ts`, and `manifest.json` to `1.40.1`
+- Updated CLI category examples in `bin/mcp-mysql.js` to match active category set
+- Updated category examples in `README.md` and `DOCUMENTATIONS.md` to remove removed categories
+- Refactored tool registry filtering into `src/tools/toolRegistry.ts`
+- Refactored tool argument validation registry into `src/tools/toolArgumentValidation.ts`
+
 ## [1.40.0] - 2026-03-06
 
 ### Removed
