@@ -20,7 +20,7 @@ export enum ToolCategory {
 }
 
 /**
- * Documentation categories from README (15 categories)
+ * Documentation categories from README (13 categories)
  * More intuitive and matches user mental model
  */
 export enum DocCategory {
@@ -34,12 +34,10 @@ export enum DocCategory {
   STORED_PROCEDURES = "stored_procedures",
   VIEWS_MANAGEMENT = "views_management",
   TRIGGERS_MANAGEMENT = "triggers_management",
-  FUNCTIONS_MANAGEMENT = "functions_management",
   INDEX_MANAGEMENT = "index_management",
   CONSTRAINT_MANAGEMENT = "constraint_management",
   TABLE_MAINTENANCE = "table_maintenance",
   QUERY_OPTIMIZATION = "query_optimization",
-  BACKUP_RESTORE = "backup_restore",
   ANALYSIS = "analysis",
 }
 
@@ -118,14 +116,6 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   dropTrigger: ToolCategory.DDL,
   showCreateTrigger: ToolCategory.LIST,
 
-  // Function tools
-  listFunctions: ToolCategory.LIST,
-  getFunctionInfo: ToolCategory.LIST,
-  createFunction: ToolCategory.PROCEDURE,
-  dropFunction: ToolCategory.PROCEDURE,
-  showCreateFunction: ToolCategory.LIST,
-  executeFunction: ToolCategory.PROCEDURE,
-
   // Index tools
   listIndexes: ToolCategory.LIST,
   getIndexInfo: ToolCategory.LIST,
@@ -151,13 +141,6 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   getTableStatus: ToolCategory.LIST,
   flushTable: ToolCategory.UTILITY,
   getTableSize: ToolCategory.LIST,
-
-  // Backup and restore tools
-  backupTable: ToolCategory.UTILITY,
-  backupDatabase: ToolCategory.UTILITY,
-  restoreFromSql: ToolCategory.UTILITY,
-  getCreateTableStatement: ToolCategory.UTILITY,
-  getDatabaseSchema: ToolCategory.UTILITY,
 
   // Full-Text Search Tools
   createFulltextIndex: ToolCategory.DDL,
@@ -237,14 +220,6 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   dropTrigger: DocCategory.TRIGGERS_MANAGEMENT,
   showCreateTrigger: DocCategory.TRIGGERS_MANAGEMENT,
 
-  // Functions Management
-  listFunctions: DocCategory.FUNCTIONS_MANAGEMENT,
-  getFunctionInfo: DocCategory.FUNCTIONS_MANAGEMENT,
-  createFunction: DocCategory.FUNCTIONS_MANAGEMENT,
-  dropFunction: DocCategory.FUNCTIONS_MANAGEMENT,
-  showCreateFunction: DocCategory.FUNCTIONS_MANAGEMENT,
-  executeFunction: DocCategory.FUNCTIONS_MANAGEMENT,
-
   // Index Management
   listIndexes: DocCategory.INDEX_MANAGEMENT,
   getIndexInfo: DocCategory.INDEX_MANAGEMENT,
@@ -276,13 +251,6 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   getOptimizationHints: DocCategory.QUERY_OPTIMIZATION,
   repairQuery: DocCategory.QUERY_OPTIMIZATION,
 
-  // Backup & Restore
-  backupTable: DocCategory.BACKUP_RESTORE,
-  backupDatabase: DocCategory.BACKUP_RESTORE,
-  restoreFromSql: DocCategory.BACKUP_RESTORE,
-  getCreateTableStatement: DocCategory.BACKUP_RESTORE,
-  getDatabaseSchema: DocCategory.BACKUP_RESTORE,
-
   // Analysis
   getDatabaseSummary: DocCategory.ANALYSIS,
   getSchemaERD: DocCategory.ANALYSIS,
@@ -308,7 +276,6 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.STORED_PROCEDURES,
     DocCategory.VIEWS_MANAGEMENT,
     DocCategory.TRIGGERS_MANAGEMENT,
-    DocCategory.FUNCTIONS_MANAGEMENT,
     DocCategory.INDEX_MANAGEMENT,
     DocCategory.CONSTRAINT_MANAGEMENT,
     DocCategory.TABLE_MAINTENANCE,
@@ -336,16 +303,14 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.INDEX_MANAGEMENT,
     DocCategory.CONSTRAINT_MANAGEMENT,
     DocCategory.TABLE_MAINTENANCE,
-    DocCategory.BACKUP_RESTORE,
   ],
   utility: [
     DocCategory.UTILITIES,
     DocCategory.TABLE_MAINTENANCE,
     DocCategory.QUERY_OPTIMIZATION,
-    DocCategory.BACKUP_RESTORE,
   ],
   transaction: [DocCategory.TRANSACTION_MANAGEMENT],
-  procedure: [DocCategory.STORED_PROCEDURES, DocCategory.FUNCTIONS_MANAGEMENT],
+  procedure: [DocCategory.STORED_PROCEDURES],
 };
 
 /**

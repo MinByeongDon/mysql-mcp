@@ -5,6 +5,37 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.2] - 2026-03-07
+
+### Removed
+- **Functions Management Category**: Removed category `functions_management` and all 6 tools
+  - `list_functions` - List user-defined functions
+  - `get_function_info` - Get function details
+  - `create_function` - Create function
+  - `drop_function` - Drop function
+  - `show_create_function` - Show CREATE FUNCTION statement
+  - `execute_function` - Execute function
+- **Backup & Restore Category**: Removed category `backup_restore` and all 5 tools
+  - `backup_table` - Backup a single table
+  - `backup_database` - Backup entire database
+  - `restore_from_sql` - Restore from SQL dump
+  - `get_create_table_statement` - Get CREATE TABLE statement
+  - `get_database_schema` - Get complete schema snapshot
+- Removed tool modules `src/tools/functionTools.ts` and `src/tools/backupRestoreTools.ts`
+
+### Changed
+- Updated tool count: 73 → 62 tools (-11 tools)
+- Updated category count: 15 → 13 categories (removed `functions_management`, `backup_restore`)
+- Updated `src/mcp-server.ts` to remove tool schemas and call routing for all 11 tools
+- Updated `src/index.ts` to remove MySQLMCP imports, fields, initialization, and methods for removed tool sets
+- Updated `src/config/featureConfig.ts` to remove enum values and category mappings for both categories
+- Updated CLI category help in `bin/mcp-mysql.js`
+- Updated `README.md` and `DOCUMENTATIONS.md` to reflect new category list and tool totals
+- Synchronized versions to `1.40.2` in `package.json`, `src/mcp-server.ts`, and `manifest.json`
+
+### Fixed
+- Updated procedure permission example in docs to reference `execute_stored_procedure` instead of removed function execution tool
+
 ## [1.40.1] - 2026-03-06
 
 ### Changed

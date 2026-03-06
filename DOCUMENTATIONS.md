@@ -1,8 +1,8 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-03-06 17:30:00
-**Version:** 1.40.1
-**Total Tools:** 73
+**Last Updated:** 2026-03-07 10:30:00
+**Version:** 1.40.2
+**Total Tools:** 62
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
 
@@ -80,7 +80,7 @@ Configure MySQL MCP with two access-control layers:
 | `ddl` | Schema changes | `create_table`, `alter_table` |
 | `utility` | Utility operations | `test_connection`, `analyze_table` |
 | `transaction` | Transaction management | `begin_transaction`, `commit_transaction` |
-| `procedure` | Stored procedures | `create_stored_procedure`, `execute_function` |
+| `procedure` | Stored procedures | `create_stored_procedure`, `execute_stored_procedure` |
 
 ### Filtering Logic
 
@@ -169,15 +169,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_trigger` - Remove triggers
 - `show_create_trigger` - Show CREATE statement
 
-### 11. Functions Management (6 tools)
-- `list_functions` - List functions
-- `get_function_info` - Get function details
-- `create_function` - Create functions
-- `drop_function` - Remove functions
-- `show_create_function` - Show CREATE statement
-- `execute_function` - Execute functions
-
-### 12. Table Maintenance (8 tools)
+### 11. Table Maintenance (8 tools)
 - `analyze_table` - Update statistics
 - `optimize_table` - Reclaim space
 - `check_table` - Check for errors
@@ -187,19 +179,19 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `flush_table` - Close/reopen table
 - `get_table_size` - Get size information
 
-### 13. Transaction Management (5 tools)
+### 12. Transaction Management (5 tools)
 - `begin_transaction` - Start transaction
 - `commit_transaction` - Commit transaction
 - `rollback_transaction` - Rollback transaction
 - `get_transaction_status` - Check transaction state
 - `execute_in_transaction` - Execute within transaction
 
-### 14. Query Optimization (3 tools)
+### 13. Query Optimization (3 tools)
 - `analyze_query` - Analyze query performance
 - `get_optimization_hints` - Get optimizer hints
 - `repair_query` - Repair broken SQL queries
 
-### 15. Utilities (4 tools)
+### 14. Utilities (4 tools)
 - `test_connection` - Test connectivity
 - `describe_connection` - Connection info
 - `read_changelog` - Read changelog

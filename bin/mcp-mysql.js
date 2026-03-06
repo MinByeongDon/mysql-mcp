@@ -66,13 +66,13 @@ if (!mysqlUrl) {
     "  schema_management, utilities, transaction_management, stored_procedures,",
   );
   console.error(
-    "  views_management, triggers_management, functions_management, index_management,",
+    "  views_management, triggers_management, index_management,",
   );
   console.error(
     "  constraint_management, table_maintenance, query_optimization,",
   );
   console.error(
-    "  backup_restore, analysis",
+    "  analysis",
   );
   console.error("");
   console.error("Filtering Logic:");

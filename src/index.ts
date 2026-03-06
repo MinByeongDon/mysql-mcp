@@ -8,11 +8,9 @@ import { StoredProcedureTools } from "./tools/storedProcedureTools";
 import { DataExportTools } from "./tools/dataExportTools";
 import { ViewTools } from "./tools/viewTools";
 import { TriggerTools } from "./tools/triggerTools";
-import { FunctionTools } from "./tools/functionTools";
 import { IndexTools } from "./tools/indexTools";
 import { ConstraintTools } from "./tools/constraintTools";
 import { MaintenanceTools } from "./tools/maintenanceTools";
-import { BackupRestoreTools } from "./tools/backupRestoreTools";
 import { AnalysisTools } from "./tools/analysisTools";
 import { AiTools } from "./tools/aiTools";
 import { MacroTools } from "./tools/macroTools";
@@ -37,11 +35,9 @@ export class MySQLMCP {
   private dataExportTools: DataExportTools;
   private viewTools: ViewTools;
   private triggerTools: TriggerTools;
-  private functionTools: FunctionTools;
   private indexTools: IndexTools;
   private constraintTools: ConstraintTools;
   private maintenanceTools: MaintenanceTools;
-  private backupRestoreTools: BackupRestoreTools;
   private analysisTools: AnalysisTools;
   private aiTools: AiTools;
   private macroTools: MacroTools;
@@ -63,11 +59,9 @@ export class MySQLMCP {
     this.dataExportTools = new DataExportTools(this.security);
     this.viewTools = new ViewTools(this.security);
     this.triggerTools = new TriggerTools(this.security);
-    this.functionTools = new FunctionTools(this.security);
     this.indexTools = new IndexTools(this.security);
     this.constraintTools = new ConstraintTools(this.security);
     this.maintenanceTools = new MaintenanceTools(this.security);
-    this.backupRestoreTools = new BackupRestoreTools(this.security);
     this.analysisTools = new AnalysisTools(this.security);
     this.aiTools = new AiTools(this.security);
     this.macroTools = new MacroTools(this.security);
@@ -681,57 +675,6 @@ export class MySQLMCP {
     const check = this.checkToolEnabled("showCreateTrigger");
     if (!check.enabled) return { status: "error", error: check.error };
     return await this.triggerTools.showCreateTrigger(params);
-  }
-
-  // ==========================================
-  // Function Tools
-  // ==========================================
-
-  async listFunctions(params: { database?: string }) {
-    const check = this.checkToolEnabled("listFunctions");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.functionTools.listFunctions(params);
-  }
-
-  async getFunctionInfo(params: { function_name: string; database?: string }) {
-    const check = this.checkToolEnabled("getFunctionInfo");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.functionTools.getFunctionInfo(params);
-  }
-
-  async createFunction(params: any) {
-    const check = this.checkToolEnabled("createFunction");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.functionTools.createFunction(params);
-  }
-
-  async dropFunction(params: {
-    function_name: string;
-    if_exists?: boolean;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("dropFunction");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.functionTools.dropFunction(params);
-  }
-
-  async showCreateFunction(params: {
-    function_name: string;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("showCreateFunction");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.functionTools.showCreateFunction(params);
-  }
-
-  async executeFunction(params: {
-    function_name: string;
-    parameters?: any[];
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("executeFunction");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.functionTools.executeFunction(params);
   }
 
   // ==========================================

@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-03-06 17:30:00
+**Last Updated:** 2026-03-07 10:30:00
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -255,19 +255,17 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
 | `stored_procedures` | Create, execute, and manage stored procedures | `create_stored_procedure, drop_stored_procedure, execute_stored_procedure, get_stored_procedure_info, list_stored_procedures, show_create_procedure` |
 | `views_management` | Create and manage database views | `alter_view, create_view, drop_view, get_view_info, list_views, show_create_view` |
 | `triggers_management` | Create and manage database triggers | `create_trigger, drop_trigger, get_trigger_info, list_triggers, show_create_trigger` |
-| `functions_management` | Create and manage database functions | `create_function, drop_function, execute_function, get_function_info, list_functions, show_create_function` |
 | `index_management` | Optimize performance with index management | `analyze_index, create_index, drop_index, get_index_info, list_indexes` |
 | `constraint_management` | Manage data integrity constraints | `add_check_constraint, add_foreign_key, add_unique_constraint, drop_constraint, drop_foreign_key, list_constraints, list_foreign_keys` |
 | `table_maintenance` | Table optimization, repair, and maintenance | `analyze_table, check_table, flush_table, get_table_size, get_table_status, optimize_table, repair_table, truncate_table` |
 | `query_optimization` | Analyze and optimize SQL queries | `analyze_query, get_optimization_hints` |
-| `backup_restore` | Create backups and restore databases | `backup_database, backup_table, get_create_table_statement, get_database_schema, restore_from_sql` |
 | `analysis` | Data analysis and reporting tools | `get_column_statistics, get_database_summary, get_schema_erd, get_schema_rag_context` |
 
 <details>
   <summary>Copy/paste list (comma-separated, no spaces)</summary>
 
 ```text
-database_discovery,crud_operations,bulk_operations,custom_queries,schema_management,utilities,transaction_management,stored_procedures,views_management,triggers_management,functions_management,index_management,constraint_management,table_maintenance,query_optimization,backup_restore,analysis
+database_discovery,crud_operations,bulk_operations,custom_queries,schema_management,utilities,transaction_management,stored_procedures,views_management,triggers_management,index_management,constraint_management,table_maintenance,query_optimization,analysis
 ```
 
 </details>
@@ -278,7 +276,7 @@ Full category → tool mapping (and examples) lives in **[DOCUMENTATIONS.md → 
 
 ## Available Tools
 
-The server exposes **73 tools** organized into categories (CRUD, schema, and utilities).
+The server exposes **62 tools** organized into categories (CRUD, schema, and utilities).
 
 - Complete list of tools: **[DOCUMENTATIONS.md → Complete Tools Reference](DOCUMENTATIONS.md#🔧-complete-tools-reference)**
 
@@ -291,7 +289,6 @@ For comprehensive documentation, see **[DOCUMENTATIONS.md](DOCUMENTATIONS.md)**:
 - **DDL Operations** - Create, alter, and drop tables
 - **Data Export Tools** - Export to CSV, JSON, and SQL formats
 - **Data Import Tools** - Import from CSV and JSON sources
-- **Database Backup & Restore** - Full backup/restore with SQL dumps
 - **Data Migration Tools** - Copy, move, clone, compare, and sync data
 - **Schema Versioning** - Version control for database schema changes
 - **Transaction Management** - ACID transactions

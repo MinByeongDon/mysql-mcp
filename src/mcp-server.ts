@@ -636,7 +636,7 @@ const TOOLS: Tool[] = [
   {
     name: "drop_table",
     description:
-      '🗑️ DESTRUCTIVE: Permanently deletes a table and ALL its data. Cannot be undone! Consider backup_table first. Requires "ddl" permission. ⚠️ WARNING: IRREVERSIBLE!',
+      '🗑️ DESTRUCTIVE: Permanently deletes a table and ALL its data. Cannot be undone! Requires "ddl" permission. ⚠️ WARNING: IRREVERSIBLE!',
     inputSchema: {
       type: "object",
       properties: {
@@ -1310,142 +1310,6 @@ const TOOLS: Tool[] = [
       required: ["trigger_name"],
     },
   },
-  // Function Tools
-  {
-    name: "list_functions",
-    description: "Lists all user-defined functions in the database.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-      },
-    },
-  },
-  {
-    name: "get_function_info",
-    description:
-      "Gets detailed information about a specific function including parameters.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        function_name: { type: "string", description: "Name of the function" },
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-      },
-      required: ["function_name"],
-    },
-  },
-  {
-    name: "create_function",
-    description:
-      "Creates a new user-defined function. Requires 'ddl' permission.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        function_name: { type: "string", description: "Name of the function" },
-        parameters: {
-          type: "array",
-          description: "Array of parameter definitions",
-          items: {
-            type: "object",
-            properties: {
-              name: { type: "string" },
-              data_type: { type: "string" },
-            },
-            required: ["name", "data_type"],
-          },
-        },
-        returns: { type: "string", description: "Return data type" },
-        body: { type: "string", description: "Function body (SQL statements)" },
-        deterministic: {
-          type: "boolean",
-          description:
-            "Whether function always returns same result for same input",
-        },
-        data_access: {
-          type: "string",
-          enum: [
-            "CONTAINS SQL",
-            "NO SQL",
-            "READS SQL DATA",
-            "MODIFIES SQL DATA",
-          ],
-        },
-        security: { type: "string", enum: ["DEFINER", "INVOKER"] },
-        comment: { type: "string", description: "Optional comment" },
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-      },
-      required: ["function_name", "returns", "body"],
-    },
-  },
-  {
-    name: "drop_function",
-    description: "Drops a user-defined function. Requires 'ddl' permission.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        function_name: {
-          type: "string",
-          description: "Name of the function to drop",
-        },
-        if_exists: {
-          type: "boolean",
-          description: "If true, will not error if function does not exist",
-        },
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-      },
-      required: ["function_name"],
-    },
-  },
-  {
-    name: "show_create_function",
-    description: "Shows the CREATE statement for a function.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        function_name: { type: "string", description: "Name of the function" },
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-      },
-      required: ["function_name"],
-    },
-  },
-  {
-    name: "execute_function",
-    description: "Executes a user-defined function and returns its result.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        function_name: {
-          type: "string",
-          description: "Name of the function to execute",
-        },
-        parameters: {
-          type: "array",
-          description: "Array of parameter values",
-          items: {},
-        },
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-      },
-      required: ["function_name"],
-    },
-  },
   // Index Tools
   {
     name: "list_indexes",
@@ -1807,7 +1671,7 @@ const TOOLS: Tool[] = [
   {
     name: "truncate_table",
     description:
-      "🗑️ DESTRUCTIVE: Removes ALL rows from a table instantly (faster than DELETE). Resets auto-increment counters. Cannot be undone! Consider backup_table first. Requires 'ddl' permission. ⚠️ WARNING: IRREVERSIBLE!",
+      "🗑️ DESTRUCTIVE: Removes ALL rows from a table instantly (faster than DELETE). Resets auto-increment counters. Cannot be undone! Requires 'ddl' permission. ⚠️ WARNING: IRREVERSIBLE!",
     inputSchema: {
       type: "object",
       properties: {
@@ -1875,134 +1739,6 @@ const TOOLS: Tool[] = [
         database: {
           type: "string",
           description: "Optional: specific database name",
-        },
-      },
-    },
-  },
-  // Backup and Restore Tools
-  {
-    name: "backup_table",
-    description:
-      "Backup a single table to SQL dump format including structure and optionally data.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        table_name: {
-          type: "string",
-          description: "Name of the table to backup",
-        },
-        include_data: {
-          type: "boolean",
-          description: "Include table data in the backup (default: true)",
-        },
-        include_drop: {
-          type: "boolean",
-          description: "Include DROP TABLE IF EXISTS statement (default: true)",
-        },
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-      },
-      required: ["table_name"],
-    },
-  },
-  {
-    name: "backup_database",
-    description:
-      "💾 Creates SQL dump backup of entire database or specific tables. Includes structure and optionally data. Returns backup as SQL text. Use before major schema changes or migrations.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        include_data: {
-          type: "boolean",
-          description: "Include table data in the backup (default: true)",
-        },
-        include_drop: {
-          type: "boolean",
-          description:
-            "Include DROP TABLE IF EXISTS statements (default: true)",
-        },
-        tables: {
-          type: "array",
-          items: { type: "string" },
-          description:
-            "Optional: specific tables to backup (default: all tables)",
-        },
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-      },
-    },
-  },
-  {
-    name: "restore_from_sql",
-    description:
-      "Restore database from SQL dump content. Executes SQL statements from the provided dump. Requires 'ddl' permission.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        sql_dump: {
-          type: "string",
-          description: "SQL dump content to restore",
-        },
-        stop_on_error: {
-          type: "boolean",
-          description: "Stop execution on first error (default: true)",
-        },
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-      },
-      required: ["sql_dump"],
-    },
-  },
-  {
-    name: "get_create_table_statement",
-    description: "Get the CREATE TABLE statement for a specific table.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        table_name: {
-          type: "string",
-          description: "Name of the table",
-        },
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-      },
-      required: ["table_name"],
-    },
-  },
-  {
-    name: "get_database_schema",
-    description:
-      "Get complete database schema including tables, views, procedures, functions, and triggers.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        database: {
-          type: "string",
-          description: "Optional: specific database name",
-        },
-        include_views: {
-          type: "boolean",
-          description: "Include views in schema (default: true)",
-        },
-        include_procedures: {
-          type: "boolean",
-          description: "Include stored procedures in schema (default: true)",
-        },
-        include_functions: {
-          type: "boolean",
-          description: "Include functions in schema (default: true)",
-        },
-        include_triggers: {
-          type: "boolean",
-          description: "Include triggers in schema (default: true)",
         },
       },
     },
@@ -2189,7 +1925,7 @@ const TOOLS: Tool[] = [
 const server = new Server(
   {
     name: "mysql-mcp-server",
-    version: "1.40.1",
+    version: "1.40.2",
   },
   {
     capabilities: {
@@ -2542,26 +2278,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
         break;
       case "show_create_trigger":
         result = await mysqlMCP.showCreateTrigger((args || {}) as any);
-        break;
-
-      // Function Tools
-      case "list_functions":
-        result = await mysqlMCP.listFunctions((args || {}) as any);
-        break;
-      case "get_function_info":
-        result = await mysqlMCP.getFunctionInfo((args || {}) as any);
-        break;
-      case "create_function":
-        result = await mysqlMCP.createFunction((args || {}) as any);
-        break;
-      case "drop_function":
-        result = await mysqlMCP.dropFunction((args || {}) as any);
-        break;
-      case "show_create_function":
-        result = await mysqlMCP.showCreateFunction((args || {}) as any);
-        break;
-      case "execute_function":
-        result = await mysqlMCP.executeFunction((args || {}) as any);
         break;
 
       // Index Tools
