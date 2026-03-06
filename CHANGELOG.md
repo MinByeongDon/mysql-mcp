@@ -5,6 +5,17 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.3] - 2026-03-07
+
+### Fixed
+- Added missing tool-category mappings for snake_case and camelCase variants in `src/config/featureConfig.ts`
+- Resolved unmapped tools: `get_schema_erd`, `repair_query`, `export_table_to_csv`, `export_query_to_csv`, `analyze_query`, `get_optimization_hints`
+- Ensured dual-layer filtering recognizes all registered MCP tools from `src/mcp-server.ts`
+
+### Changed
+- Synchronized versions to `1.40.3` in `package.json`, `src/mcp-server.ts`, and `manifest.json`
+- Updated `README.md` and `DOCUMENTATIONS.md` Last Updated metadata
+
 ## [1.40.2] - 2026-03-07
 
 ### Removed

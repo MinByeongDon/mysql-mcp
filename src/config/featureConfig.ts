@@ -53,6 +53,8 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   // Analysis tools (added here to group with database tools)
   getDatabaseSummary: ToolCategory.LIST,
   getSchemaERD: ToolCategory.LIST,
+  getSchemaErd: ToolCategory.LIST,
+  get_schema_erd: ToolCategory.LIST,
   getSchemaRagContext: ToolCategory.LIST,
 
   // CRUD tools
@@ -83,7 +85,11 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   testConnection: ToolCategory.UTILITY,
   getAllTablesRelationships: ToolCategory.UTILITY,
   exportTableToCSV: ToolCategory.UTILITY,
+  exportTableToCsv: ToolCategory.UTILITY,
+  export_table_to_csv: ToolCategory.UTILITY,
   exportQueryToCSV: ToolCategory.UTILITY,
+  exportQueryToCsv: ToolCategory.UTILITY,
+  export_query_to_csv: ToolCategory.UTILITY,
   read_changelog: ToolCategory.UTILITY,
 
   // Transaction tools
@@ -142,6 +148,14 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   flushTable: ToolCategory.UTILITY,
   getTableSize: ToolCategory.LIST,
 
+  // Query optimization tools
+  analyzeQuery: ToolCategory.UTILITY,
+  analyze_query: ToolCategory.UTILITY,
+  getOptimizationHints: ToolCategory.UTILITY,
+  get_optimization_hints: ToolCategory.UTILITY,
+  repairQuery: ToolCategory.UTILITY,
+  repair_query: ToolCategory.UTILITY,
+
   // Full-Text Search Tools
   createFulltextIndex: ToolCategory.DDL,
   fulltextSearch: ToolCategory.READ,
@@ -186,7 +200,11 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   testConnection: DocCategory.UTILITIES,
   describeConnection: DocCategory.UTILITIES,
   exportTableToCSV: DocCategory.UTILITIES,
+  exportTableToCsv: DocCategory.UTILITIES,
+  export_table_to_csv: DocCategory.UTILITIES,
   exportQueryToCSV: DocCategory.UTILITIES,
+  exportQueryToCsv: DocCategory.UTILITIES,
+  export_query_to_csv: DocCategory.UTILITIES,
   read_changelog: DocCategory.UTILITIES,
   list_all_tools: DocCategory.UTILITIES,
 
@@ -248,12 +266,17 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
 
   // Query Optimization
   analyzeQuery: DocCategory.QUERY_OPTIMIZATION,
+  analyze_query: DocCategory.QUERY_OPTIMIZATION,
   getOptimizationHints: DocCategory.QUERY_OPTIMIZATION,
+  get_optimization_hints: DocCategory.QUERY_OPTIMIZATION,
   repairQuery: DocCategory.QUERY_OPTIMIZATION,
+  repair_query: DocCategory.QUERY_OPTIMIZATION,
 
   // Analysis
   getDatabaseSummary: DocCategory.ANALYSIS,
   getSchemaERD: DocCategory.ANALYSIS,
+  getSchemaErd: DocCategory.ANALYSIS,
+  get_schema_erd: DocCategory.ANALYSIS,
   getColumnStatistics: DocCategory.ANALYSIS,
   getSchemaRagContext: DocCategory.ANALYSIS,
 
