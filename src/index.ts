@@ -12,10 +12,7 @@ import { FunctionTools } from "./tools/functionTools";
 import { IndexTools } from "./tools/indexTools";
 import { ConstraintTools } from "./tools/constraintTools";
 import { MaintenanceTools } from "./tools/maintenanceTools";
-import { ProcessTools } from "./tools/processTools";
 import { BackupRestoreTools } from "./tools/backupRestoreTools";
-import { MigrationTools } from "./tools/migrationTools";
-import { PerformanceTools } from "./tools/performanceTools";
 import { AnalysisTools } from "./tools/analysisTools";
 import { AiTools } from "./tools/aiTools";
 import { MacroTools } from "./tools/macroTools";
@@ -44,10 +41,7 @@ export class MySQLMCP {
   private indexTools: IndexTools;
   private constraintTools: ConstraintTools;
   private maintenanceTools: MaintenanceTools;
-  private processTools: ProcessTools;
   private backupRestoreTools: BackupRestoreTools;
-  private migrationTools: MigrationTools;
-  private performanceTools: PerformanceTools;
   private analysisTools: AnalysisTools;
   private aiTools: AiTools;
   private macroTools: MacroTools;
@@ -73,11 +67,7 @@ export class MySQLMCP {
     this.indexTools = new IndexTools(this.security);
     this.constraintTools = new ConstraintTools(this.security);
     this.maintenanceTools = new MaintenanceTools(this.security);
-    this.processTools = new ProcessTools(this.security);
     this.backupRestoreTools = new BackupRestoreTools(this.security);
-    this.migrationTools = new MigrationTools(this.security);
-    this.performanceTools = new PerformanceTools(this.security);
-    this.analysisTools = new AnalysisTools(this.security);
     this.analysisTools = new AnalysisTools(this.security);
     this.aiTools = new AiTools(this.security);
     this.macroTools = new MacroTools(this.security);
@@ -583,83 +573,7 @@ export class MySQLMCP {
   }
 
   // ==========================================
-  // Cache Management Methods
-  // ==========================================
-
-  /**
-   * Get cache statistics
-   */
-  getCacheStats() {
-    const db = DatabaseConnection.getInstance();
-    return {
-      status: "success",
-      data: db.getCacheStats(),
-    };
-  }
-
-  /**
-   * Get cache configuration
-   */
-  getCacheConfig() {
-    const db = DatabaseConnection.getInstance();
-    return {
-      status: "success",
-      data: db.getCacheConfig(),
-    };
-  }
-
-  /**
-   * Configure cache settings
-   */
-  configureCacheSettings(params: {
-    enabled?: boolean;
-    ttlMs?: number;
-    maxSize?: number;
-    maxMemoryMB?: number;
-  }) {
-    const db = DatabaseConnection.getInstance();
-    db.setCacheConfig(params);
-    return {
-      status: "success",
-      data: {
-        message: "Cache configuration updated successfully",
-        config: db.getCacheConfig(),
-      },
-    };
-  }
-
-  /**
-   * Clear the query cache
-   */
-  clearCache() {
-    const db = DatabaseConnection.getInstance();
-    const clearedCount = db.clearCache();
-    return {
-      status: "success",
-      data: {
-        message: `Cache cleared successfully`,
-        entriesCleared: clearedCount,
-      },
-    };
-  }
-
-  /**
-   * Invalidate cache for a specific table
-   */
-  invalidateCacheForTable(params: { table_name: string }) {
-    const db = DatabaseConnection.getInstance();
-    const invalidatedCount = db.invalidateCacheForTable(params.table_name);
-    return {
-      status: "success",
-      data: {
-        message: `Cache invalidated for table '${params.table_name}'`,
-        entriesInvalidated: invalidatedCount,
-      },
-    };
-  }
-
-  // ==========================================
-  // Query Optimization Methods
+  // Query Optimization Tools
   // ==========================================
 
   /**
@@ -981,93 +895,6 @@ export class MySQLMCP {
     const check = this.checkToolEnabled("getTableSize");
     if (!check.enabled) return { status: "error", error: check.error };
     return await this.maintenanceTools.getTableSize(params);
-  }
-
-  // ==========================================
-  // Process Management Tools
-  // ==========================================
-
-  async showProcessList(params?: { full?: boolean }) {
-    const check = this.checkToolEnabled("showProcessList");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.processTools.showProcessList(params);
-  }
-
-  async killProcess(params: {
-    process_id: number;
-    type?: "CONNECTION" | "QUERY";
-  }) {
-    const check = this.checkToolEnabled("killProcess");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.processTools.killProcess(params);
-  }
-
-  async showStatus(params?: { like?: string; global?: boolean }) {
-    const check = this.checkToolEnabled("showStatus");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.processTools.showStatus(params);
-  }
-
-  async showVariables(params?: { like?: string; global?: boolean }) {
-    const check = this.checkToolEnabled("showVariables");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.processTools.showVariables(params);
-  }
-
-  async explainQuery(params: {
-    query: string;
-    format?: "TRADITIONAL" | "JSON" | "TREE";
-    analyze?: boolean;
-  }) {
-    const check = this.checkToolEnabled("explainQuery");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.processTools.explainQuery(params);
-  }
-
-  // ==========================================
-  // Performance Monitoring Tools
-  // ==========================================
-
-  async getPerformanceMetrics() {
-    const check = this.checkToolEnabled("getPerformanceMetrics");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.performanceTools.getPerformanceMetrics();
-  }
-
-  async getTableIOStats(params?: { limit?: number; table_schema?: string }) {
-    const check = this.checkToolEnabled("getTableIOStats");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.performanceTools.getTableIOStats(params);
-  }
-
-  async getIndexUsageStats(params?: { limit?: number; table_schema?: string }) {
-    const check = this.checkToolEnabled("getIndexUsageStats");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.performanceTools.getIndexUsageStats(params);
-  }
-
-  async getUnusedIndexes(params?: { table_schema?: string }) {
-    const check = this.checkToolEnabled("getUnusedIndexes");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.performanceTools.getUnusedIndexes(params);
-  }
-
-  async getConnectionPoolStats() {
-    const check = this.checkToolEnabled("getConnectionPoolStats");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.performanceTools.getConnectionPoolStats();
-  }
-
-  async getDatabaseHealthCheck() {
-    const check = this.checkToolEnabled("getDatabaseHealthCheck");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.performanceTools.getDatabaseHealthCheck();
-  }
-
-  async resetPerformanceStats() {
-    const check = this.checkToolEnabled("resetPerformanceStats");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.performanceTools.resetPerformanceStats();
   }
 
   // Smart Query Builder Tools

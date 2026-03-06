@@ -1,8 +1,8 @@
 # MySQL MCP Server - Documentation
 
 **Last Updated:** 2026-03-06 00:00:00
-**Version:** 1.39.0
-**Total Tools:** 97
+**Version:** 1.40.0
+**Total Tools:** 73
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
 
@@ -194,34 +194,12 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `get_transaction_status` - Check transaction state
 - `execute_in_transaction` - Execute within transaction
 
-### 14. Performance Monitoring (7 tools)
-- `get_performance_metrics` - Get overall performance metrics
-- `get_table_io_stats` - Get table I/O statistics
-- `get_index_usage_stats` - Get index usage statistics
-- `get_unused_indexes` - Find unused indexes
-- `get_connection_pool_stats` - Get connection pool statistics
-- `get_database_health_check` - Get database health status
-- `reset_performance_stats` - Reset performance statistics
-
-### 15. Query Optimization (3 tools)
+### 14. Query Optimization (3 tools)
 - `analyze_query` - Analyze query performance
 - `get_optimization_hints` - Get optimizer hints
 - `repair_query` - Repair broken SQL queries
 
-### 16. Server Management (5 tools)
-- `show_process_list` - Show running processes
-- `kill_process` - Terminate processes
-- `show_status` - Server status variables
-- `show_variables` - Server configuration
-- `explain_query` - Query execution plan
-
-### 17. Cache Management (4 tools)
-- `get_cache_stats` - Query cache statistics
-- `get_cache_config` - Cache configuration
-- `configure_cache` - Configure cache settings
-- `clear_cache` - Clear cached results
-
-### 18. Utilities (4 tools)
+### 15. Utilities (4 tools)
 - `test_connection` - Test connectivity
 - `describe_connection` - Connection info
 - `read_changelog` - Read changelog

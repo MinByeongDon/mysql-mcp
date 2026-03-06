@@ -20,7 +20,7 @@ export enum ToolCategory {
 }
 
 /**
- * Documentation categories from README (18 categories)
+ * Documentation categories from README (15 categories)
  * More intuitive and matches user mental model
  */
 export enum DocCategory {
@@ -38,9 +38,6 @@ export enum DocCategory {
   INDEX_MANAGEMENT = "index_management",
   CONSTRAINT_MANAGEMENT = "constraint_management",
   TABLE_MAINTENANCE = "table_maintenance",
-  SERVER_MANAGEMENT = "server_management",
-  PERFORMANCE_MONITORING = "performance_monitoring",
-  CACHE_MANAGEMENT = "cache_management",
   QUERY_OPTIMIZATION = "query_optimization",
   BACKUP_RESTORE = "backup_restore",
   ANALYSIS = "analysis",
@@ -106,17 +103,6 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   dropStoredProcedure: ToolCategory.PROCEDURE,
   showCreateProcedure: ToolCategory.LIST,
 
-  // Cache management tools
-  getCacheStats: ToolCategory.UTILITY,
-  getCacheConfig: ToolCategory.UTILITY,
-  configureCacheSettings: ToolCategory.UTILITY,
-  clearCache: ToolCategory.UTILITY,
-  invalidateCacheForTable: ToolCategory.UTILITY,
-
-  // Query optimization tools
-  analyzeQuery: ToolCategory.UTILITY,
-  getOptimizationHints: ToolCategory.UTILITY,
-
   // View tools
   listViews: ToolCategory.LIST,
   getViewInfo: ToolCategory.LIST,
@@ -166,49 +152,12 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   flushTable: ToolCategory.UTILITY,
   getTableSize: ToolCategory.LIST,
 
-  // Process and server management tools
-  showProcessList: ToolCategory.LIST,
-  killProcess: ToolCategory.EXECUTE,
-  showStatus: ToolCategory.LIST,
-  showVariables: ToolCategory.LIST,
-  explainQuery: ToolCategory.UTILITY,
-  showEngineStatus: ToolCategory.LIST,
-  getServerInfo: ToolCategory.LIST,
-  showBinaryLogs: ToolCategory.LIST,
-  showReplicationStatus: ToolCategory.LIST,
-
   // Backup and restore tools
   backupTable: ToolCategory.UTILITY,
   backupDatabase: ToolCategory.UTILITY,
   restoreFromSql: ToolCategory.UTILITY,
   getCreateTableStatement: ToolCategory.UTILITY,
   getDatabaseSchema: ToolCategory.UTILITY,
-
-  // Schema versioning and migrations tools
-  initMigrationsTable: ToolCategory.DDL,
-  createMigration: ToolCategory.DDL,
-  applyMigrations: ToolCategory.DDL,
-  rollbackMigration: ToolCategory.DDL,
-  getMigrationStatus: ToolCategory.LIST,
-  getSchemaVersion: ToolCategory.LIST,
-  validateMigrations: ToolCategory.LIST,
-  resetFailedMigration: ToolCategory.DDL,
-  generateMigrationFromDiff: ToolCategory.DDL,
-
-  // Analysis tools - MOVED here to avoid duplication
-  // Note: keys must be unique in the object literal
-
-  // Performance monitoring tools
-  getPerformanceMetrics: ToolCategory.UTILITY,
-  getTopQueriesByTime: ToolCategory.UTILITY,
-  getTopQueriesByCount: ToolCategory.UTILITY,
-  getSlowQueries: ToolCategory.UTILITY,
-  getTableIOStats: ToolCategory.UTILITY,
-  getIndexUsageStats: ToolCategory.UTILITY,
-  getUnusedIndexes: ToolCategory.UTILITY,
-  getConnectionPoolStats: ToolCategory.UTILITY,
-  getDatabaseHealthCheck: ToolCategory.UTILITY,
-  resetPerformanceStats: ToolCategory.UTILITY,
 
   // Full-Text Search Tools
   createFulltextIndex: ToolCategory.DDL,
@@ -322,36 +271,6 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   flushTable: DocCategory.TABLE_MAINTENANCE,
   getTableSize: DocCategory.TABLE_MAINTENANCE,
 
-  // Server Management
-  showProcessList: DocCategory.SERVER_MANAGEMENT,
-  killProcess: DocCategory.SERVER_MANAGEMENT,
-  showStatus: DocCategory.SERVER_MANAGEMENT,
-  showVariables: DocCategory.SERVER_MANAGEMENT,
-  explainQuery: DocCategory.SERVER_MANAGEMENT,
-  showEngineStatus: DocCategory.SERVER_MANAGEMENT,
-  getServerInfo: DocCategory.SERVER_MANAGEMENT,
-  showBinaryLogs: DocCategory.SERVER_MANAGEMENT,
-  showReplicationStatus: DocCategory.SERVER_MANAGEMENT,
-
-  // Performance Monitoring
-  getPerformanceMetrics: DocCategory.PERFORMANCE_MONITORING,
-  getTopQueriesByTime: DocCategory.PERFORMANCE_MONITORING,
-  getTopQueriesByCount: DocCategory.PERFORMANCE_MONITORING,
-  getSlowQueries: DocCategory.PERFORMANCE_MONITORING,
-  getTableIOStats: DocCategory.PERFORMANCE_MONITORING,
-  getIndexUsageStats: DocCategory.PERFORMANCE_MONITORING,
-  getUnusedIndexes: DocCategory.PERFORMANCE_MONITORING,
-  getConnectionPoolStats: DocCategory.PERFORMANCE_MONITORING,
-  getDatabaseHealthCheck: DocCategory.PERFORMANCE_MONITORING,
-  resetPerformanceStats: DocCategory.PERFORMANCE_MONITORING,
-
-  // Cache Management
-  getCacheStats: DocCategory.CACHE_MANAGEMENT,
-  getCacheConfig: DocCategory.CACHE_MANAGEMENT,
-  configureCacheSettings: DocCategory.CACHE_MANAGEMENT,
-  clearCache: DocCategory.CACHE_MANAGEMENT,
-  invalidateCacheForTable: DocCategory.CACHE_MANAGEMENT,
-
   // Query Optimization
   analyzeQuery: DocCategory.QUERY_OPTIMIZATION,
   getOptimizationHints: DocCategory.QUERY_OPTIMIZATION,
@@ -393,7 +312,6 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.INDEX_MANAGEMENT,
     DocCategory.CONSTRAINT_MANAGEMENT,
     DocCategory.TABLE_MAINTENANCE,
-    DocCategory.SERVER_MANAGEMENT,
     DocCategory.ANALYSIS,
     DocCategory.UTILITIES,
   ],
@@ -410,7 +328,7 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.CRUD_OPERATIONS,
     DocCategory.BULK_OPERATIONS,
   ],
-  execute: [DocCategory.CUSTOM_QUERIES, DocCategory.SERVER_MANAGEMENT],
+  execute: [DocCategory.CUSTOM_QUERIES],
   ddl: [
     DocCategory.SCHEMA_MANAGEMENT,
     DocCategory.VIEWS_MANAGEMENT,
@@ -423,8 +341,6 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
   utility: [
     DocCategory.UTILITIES,
     DocCategory.TABLE_MAINTENANCE,
-    DocCategory.PERFORMANCE_MONITORING,
-    DocCategory.CACHE_MANAGEMENT,
     DocCategory.QUERY_OPTIMIZATION,
     DocCategory.BACKUP_RESTORE,
   ],

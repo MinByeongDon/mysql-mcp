@@ -5,6 +5,56 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.0] - 2026-03-06
+
+### Removed
+- **Performance Monitoring Category**: Removed entire `performance_monitoring` category and all 10 tools to reduce bundle size and simplify the codebase
+  - `get_performance_metrics` - Get overall performance metrics
+  - `get_table_io_stats` - Get table I/O statistics
+  - `get_index_usage_stats` - Get index usage statistics
+  - `get_unused_indexes` - Find unused indexes
+  - `get_connection_pool_stats` - Get connection pool statistics
+  - `get_database_health_check` - Get database health status
+  - `reset_performance_stats` - Reset performance statistics
+  - `get_top_queries_by_time` - Get top queries by execution time
+  - `get_top_queries_by_count` - Get top queries by execution count
+  - `get_slow_queries` - Get slow queries
+- **Cache Management Category**: Removed entire `cache_management` category and all 5 tools
+  - `get_cache_stats` - Query cache statistics
+  - `get_cache_config` - Cache configuration
+  - `configure_cache_settings` - Configure cache settings
+  - `clear_cache` - Clear cached results
+  - `invalidate_cache_for_table` - Invalidate cache for table
+- **Server Management Category**: Removed entire `server_management` category and all 9 tools
+  - `show_process_list` - Show running processes
+  - `kill_process` - Terminate processes
+  - `show_status` - Server status variables
+  - `show_variables` - Server configuration
+  - `explain_query` - Query execution plan
+  - `show_engine_status` - Storage engine status
+  - `get_server_info` - Server information
+  - `show_binary_logs` - Binary log files
+  - `show_replication_status` - Replication status
+- **Tool Modules**: Removed imports and initialization for `PerformanceTools` and `ProcessTools` from `index.ts`
+
+### Changed
+- Updated tool count: 97 → 73 tools (-24 tools)
+- Updated category count: 20 → 15 categories (removed `performance_monitoring`, `cache_management`, `server_management`)
+- Updated `mcp-server.ts` to remove tool registrations and routing for all 24 tools
+- Updated `index.ts` to remove MySQLMCP methods and tool imports
+- Updated `featureConfig.ts` to remove all performance/cache/server tool mappings and categories
+- Updated README.md and DOCUMENTATIONS.md to reflect tool/category count changes
+- Simplified package description
+- Bumped package version to `1.40.0`
+
+### Rationale
+- These tools were rarely used by AI agents in production
+- Added significant complexity to the codebase (~2,000+ lines)
+- Performance monitoring is typically handled by dedicated tools (MySQL Enterprise Monitor, Percona Monitoring Tools, etc.)
+- Cache management is internal implementation detail, rarely needs manual intervention
+- Server management commands are administrative tasks outside typical AI agent workflows
+- Removal reduces bundle size by ~80KB and simplifies maintenance
+
 ## [1.39.0] - 2026-03-06
 
 ### Removed

@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-03-06 14:30:00
+**Last Updated:** 2026-03-06 16:45:00
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -259,9 +259,6 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
 | `index_management` | Optimize performance with index management | `analyze_index, create_index, drop_index, get_index_info, list_indexes` |
 | `constraint_management` | Manage data integrity constraints | `add_check_constraint, add_foreign_key, add_unique_constraint, drop_constraint, drop_foreign_key, list_constraints, list_foreign_keys` |
 | `table_maintenance` | Table optimization, repair, and maintenance | `analyze_table, check_table, flush_table, get_table_size, get_table_status, optimize_table, repair_table, truncate_table` |
-| `server_management` | MySQL server configuration and administration | `explain_query, get_server_info, kill_process, show_binary_logs, show_engine_status, show_process_list, show_replication_status, show_status, show_variables` |
-| `performance_monitoring` | Monitor and analyze database performance | `get_connection_pool_stats, get_database_health_check, get_index_usage_stats, get_performance_metrics, get_slow_queries, get_table_io_stats, get_top_queries_by_count, get_top_queries_by_time, get_unused_indexes, reset_performance_stats` |
-| `cache_management` | Manage query cache and optimization | `clear_cache, configure_cache_settings, get_cache_config, get_cache_stats, invalidate_cache_for_table` |
 | `query_optimization` | Analyze and optimize SQL queries | `analyze_query, get_optimization_hints` |
 | `backup_restore` | Create backups and restore databases | `backup_database, backup_table, get_create_table_statement, get_database_schema, restore_from_sql` |
 | `analysis` | Data analysis and reporting tools | `get_column_statistics, get_database_summary, get_schema_erd, get_schema_rag_context` |
@@ -270,7 +267,7 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
   <summary>Copy/paste list (comma-separated, no spaces)</summary>
 
 ```text
-database_discovery,crud_operations,bulk_operations,custom_queries,schema_management,utilities,transaction_management,stored_procedures,views_management,triggers_management,functions_management,index_management,constraint_management,table_maintenance,server_management,performance_monitoring,cache_management,query_optimization,backup_restore,analysis
+database_discovery,crud_operations,bulk_operations,custom_queries,schema_management,utilities,transaction_management,stored_procedures,views_management,triggers_management,functions_management,index_management,constraint_management,table_maintenance,query_optimization,backup_restore,analysis
 ```
 
 </details>
@@ -281,7 +278,7 @@ Full category → tool mapping (and examples) lives in **[DOCUMENTATIONS.md → 
 
 ## Available Tools
 
-The server exposes **97 tools** organized into categories (CRUD, schema, and perf/monitoring).
+The server exposes **73 tools** organized into categories (CRUD, schema, and utilities).
 
 - Complete list of tools: **[DOCUMENTATIONS.md → Complete Tools Reference](DOCUMENTATIONS.md#🔧-complete-tools-reference)**
 
