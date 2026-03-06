@@ -5,6 +5,21 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.36.0] - 2026-03-05
+
+### Removed
+- **Data Migration Tools**: Removed 5 unused tools from `migrationTools.ts` (`copy_table_data`, `move_table_data`, `clone_table`, `compare_table_structure`, `sync_table_data`)
+- **Import/Export Tools**: Removed 4 unused tools from `dataExportTools.ts` (`export_query_to_csv`, `export_query_to_json`, `export_table_to_sql`, `import_from_csv`)
+- **Backup & Restore Tools**: Removed 5 unused tools from `backupRestoreTools.ts` (`backup_table`, `backup_database`, `restore_from_sql`, `get_create_table_statement`, `get_database_schema`)
+- **Performance Monitoring Tools**: Removed 3 unused tools from `performanceTools.ts` (`get_top_queries_by_time`, `get_top_queries_by_count`, `get_slow_queries`)
+- **Server Management Tools**: Removed 4 unused tools from `processTools.ts` (`show_engine_status`, `get_server_info`, `show_binary_logs`, `show_replication_status`)
+
+### Changed
+- Updated tool registrations in `mcp-server.ts` to remove deleted tools
+- Updated DOCUMENTATIONS.md to reflect tool/category count changes (134 → 117 tools, 23 → 21 categories)
+- Updated README.md with new tool count (117 tools)
+- Bumped package version to `1.36.0`
+
 ## [1.35.0] - 2026-03-04
 
 ### Removed

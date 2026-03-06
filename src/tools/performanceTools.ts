@@ -126,169 +126,17 @@ export class PerformanceTools {
     }
   }
 
-  /**
-   * Get top queries by execution time
-   */
-  async getTopQueriesByTime(params?: { limit?: number }): Promise<{
-    status: string;
-    data?: any[];
-    error?: string;
-  }> {
-    try {
-      const limit = params?.limit || 10;
 
-      if (!Number.isInteger(limit) || limit <= 0 || limit > 100) {
-        return {
-          status: "error",
-          error: "Limit must be a positive integer between 1 and 100",
-        };
-      }
-
-      const query = `
-        SELECT
-          DIGEST_TEXT as query_pattern,
-          COUNT_STAR as execution_count,
-          ROUND(AVG_TIMER_WAIT / 1000000000000, 6) as avg_execution_time_sec,
-          ROUND(MAX_TIMER_WAIT / 1000000000000, 6) as max_execution_time_sec,
-          ROUND(SUM_TIMER_WAIT / 1000000000000, 6) as total_execution_time_sec,
-          ROUND(SUM_LOCK_TIME / 1000000000000, 6) as total_lock_time_sec,
-          SUM_ROWS_EXAMINED as rows_examined,
-          SUM_ROWS_SENT as rows_sent,
-          SUM_ROWS_AFFECTED as rows_affected,
-          FIRST_SEEN,
-          LAST_SEEN
-        FROM performance_schema.events_statements_summary_by_digest
-        WHERE DIGEST_TEXT IS NOT NULL
-        ORDER BY SUM_TIMER_WAIT DESC
-        LIMIT ${limit}
-      `;
-
-      const results = await this.db.query<any[]>(query);
-
-      return {
-        status: "success",
-        data: results,
-      };
-    } catch (error: any) {
-      return {
-        status: "error",
-        error: error.message,
-      };
-    }
-  }
 
   /**
    * Get top queries by execution count
    */
-  async getTopQueriesByCount(params?: { limit?: number }): Promise<{
-    status: string;
-    data?: any[];
-    error?: string;
-  }> {
-    try {
-      const limit = params?.limit || 10;
 
-      if (!Number.isInteger(limit) || limit <= 0 || limit > 100) {
-        return {
-          status: "error",
-          error: "Limit must be a positive integer between 1 and 100",
-        };
-      }
-
-      const query = `
-        SELECT
-          DIGEST_TEXT as query_pattern,
-          COUNT_STAR as execution_count,
-          ROUND(AVG_TIMER_WAIT / 1000000000000, 6) as avg_execution_time_sec,
-          ROUND(MAX_TIMER_WAIT / 1000000000000, 6) as max_execution_time_sec,
-          ROUND(SUM_TIMER_WAIT / 1000000000000, 6) as total_execution_time_sec,
-          SUM_ROWS_EXAMINED as rows_examined,
-          SUM_ROWS_SENT as rows_sent,
-          FIRST_SEEN,
-          LAST_SEEN
-        FROM performance_schema.events_statements_summary_by_digest
-        WHERE DIGEST_TEXT IS NOT NULL
-        ORDER BY COUNT_STAR DESC
-        LIMIT ${limit}
-      `;
-
-      const results = await this.db.query<any[]>(query);
-
-      return {
-        status: "success",
-        data: results,
-      };
-    } catch (error: any) {
-      return {
-        status: "error",
-        error: error.message,
-      };
-    }
-  }
 
   /**
    * Get slow queries
    */
-  async getSlowQueries(params?: {
-    limit?: number;
-    threshold_seconds?: number;
-  }): Promise<{
-    status: string;
-    data?: any[];
-    error?: string;
-  }> {
-    try {
-      const limit = params?.limit || 10;
-      const thresholdSec = params?.threshold_seconds || 1;
 
-      if (!Number.isInteger(limit) || limit <= 0 || limit > 100) {
-        return {
-          status: "error",
-          error: "Limit must be a positive integer between 1 and 100",
-        };
-      }
-
-      if (typeof thresholdSec !== "number" || thresholdSec <= 0) {
-        return {
-          status: "error",
-          error: "Threshold must be a positive number",
-        };
-      }
-
-      const thresholdPico = thresholdSec * 1000000000000;
-
-      const query = `
-        SELECT
-          DIGEST_TEXT as query_pattern,
-          COUNT_STAR as execution_count,
-          ROUND(AVG_TIMER_WAIT / 1000000000000, 6) as avg_execution_time_sec,
-          ROUND(MAX_TIMER_WAIT / 1000000000000, 6) as max_execution_time_sec,
-          ROUND(SUM_TIMER_WAIT / 1000000000000, 6) as total_execution_time_sec,
-          ROUND(SUM_LOCK_TIME / 1000000000000, 6) as total_lock_time_sec,
-          SUM_ROWS_EXAMINED as rows_examined,
-          SUM_ROWS_SENT as rows_sent,
-          SUM_NO_INDEX_USED as no_index_used_count,
-          FIRST_SEEN,
-          LAST_SEEN
-        FROM performance_schema.events_statements_summary_by_digest
-        WHERE DIGEST_TEXT IS NOT NULL AND AVG_TIMER_WAIT > ${thresholdPico}
-        ORDER BY AVG_TIMER_WAIT DESC
-        LIMIT ${limit}
-      `;
-
-      const results = await this.db.query<any[]>(query);
-
-      return {
-        status: "success",
-        data: results,
-      };
-    } catch (error: any) {
-      return {
-        status: "error",
-        error: error.message,
-      };
-    }
-  }
 
   /**
    * Get table I/O statistics

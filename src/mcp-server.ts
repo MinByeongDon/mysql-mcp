@@ -3482,16 +3482,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
         result = await mysqlMCP.exportTableToCSV((args || {}) as any);
         break;
 
-      case "export_query_to_csv":
-        result = await mysqlMCP.exportQueryToCSV(
-          (args || {}) as {
-            query: string;
-            params?: any[];
-            include_headers?: boolean;
-          },
-        );
-        break;
-
       // Cache Management Tools
       case "get_cache_stats":
         result = mysqlMCP.getCacheStats();
@@ -3672,74 +3662,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       case "explain_query":
         result = await mysqlMCP.explainQuery((args || {}) as any);
         break;
-      case "show_engine_status":
-        result = await mysqlMCP.showEngineStatus((args || {}) as any);
-        break;
-      case "get_server_info":
-        result = await mysqlMCP.getServerInfo();
-        break;
-      case "show_binary_logs":
-        result = await mysqlMCP.showBinaryLogs();
-        break;
-      case "show_replication_status":
-        result = await mysqlMCP.showReplicationStatus((args || {}) as any);
-        break;
-
-      // Backup and Restore Tools
-      case "backup_table":
-        result = await mysqlMCP.backupTable((args || {}) as any);
-        break;
-      case "backup_database":
-        result = await mysqlMCP.backupDatabase((args || {}) as any);
-        break;
-      case "restore_from_sql":
-        result = await mysqlMCP.restoreFromSql((args || {}) as any);
-        break;
-      case "get_create_table_statement":
-        result = await mysqlMCP.getCreateTableStatement((args || {}) as any);
-        break;
-      case "get_database_schema":
-        result = await mysqlMCP.getDatabaseSchema((args || {}) as any);
-        break;
 
       // Extended Data Export Tools
       case "export_table_to_json":
         result = await mysqlMCP.exportTableToJSON((args || {}) as any);
         break;
-      case "export_query_to_json":
-        result = await mysqlMCP.exportQueryToJSON((args || {}) as any);
-        break;
 
       case "safe_export_table":
         result = await mysqlMCP.safeExportTable((args || {}) as any);
         break;
-      case "export_table_to_sql":
-        result = await mysqlMCP.exportTableToSql((args || {}) as any);
-        break;
 
       // Data Import Tools
-      case "import_from_csv":
-        result = await mysqlMCP.importFromCSV((args || {}) as any);
-        break;
       case "import_from_json":
         result = await mysqlMCP.importFromJSON((args || {}) as any);
-        break;
-
-      // Data Migration Tools
-      case "copy_table_data":
-        result = await mysqlMCP.copyTableData((args || {}) as any);
-        break;
-      case "move_table_data":
-        result = await mysqlMCP.moveTableData((args || {}) as any);
-        break;
-      case "clone_table":
-        result = await mysqlMCP.cloneTable((args || {}) as any);
-        break;
-      case "compare_table_structure":
-        result = await mysqlMCP.compareTableStructure((args || {}) as any);
-        break;
-      case "sync_table_data":
-        result = await mysqlMCP.syncTableData((args || {}) as any);
         break;
 
       // Schema Versioning and Migrations Tools
@@ -3774,15 +3709,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       // Performance Monitoring Tools
       case "get_performance_metrics":
         result = await mysqlMCP.getPerformanceMetrics();
-        break;
-      case "get_top_queries_by_time":
-        result = await mysqlMCP.getTopQueriesByTime((args || {}) as any);
-        break;
-      case "get_top_queries_by_count":
-        result = await mysqlMCP.getTopQueriesByCount((args || {}) as any);
-        break;
-      case "get_slow_queries":
-        result = await mysqlMCP.getSlowQueries((args || {}) as any);
         break;
       case "get_table_io_stats":
         result = await mysqlMCP.getTableIOStats((args || {}) as any);

@@ -477,18 +477,6 @@ export class MySQLMCP {
     return await this.dataExportTools.exportTableToCSV(params);
   }
 
-  async exportQueryToCSV(params: {
-    query: string;
-    params?: any[];
-    include_headers?: boolean;
-  }) {
-    const check = this.checkToolEnabled("exportQueryToCSV");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.dataExportTools.exportQueryToCSV(params);
-  }
-
   // Extended Data Export Tools (JSON, SQL)
   async exportTableToJSON(params: {
     table_name: string;
@@ -503,32 +491,6 @@ export class MySQLMCP {
       return { status: "error", error: check.error };
     }
     return await this.dataExportTools.exportTableToJSON(params);
-  }
-
-  async exportQueryToJSON(params: {
-    query: string;
-    params?: any[];
-    pretty?: boolean;
-  }) {
-    const check = this.checkToolEnabled("exportQueryToJSON");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.dataExportTools.exportQueryToJSON(params);
-  }
-
-  async exportTableToSql(params: {
-    table_name: string;
-    filters?: any[];
-    include_create_table?: boolean;
-    batch_size?: number;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("exportTableToSql");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.dataExportTools.exportTableToSql(params);
   }
 
   // Data Import Tools
@@ -561,143 +523,6 @@ export class MySQLMCP {
       return { status: "error", error: check.error };
     }
     return await this.dataExportTools.importFromJSON(params);
-  }
-
-  // Backup and Restore Tools
-  async backupTable(params: {
-    table_name: string;
-    include_data?: boolean;
-    include_drop?: boolean;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("backupTable");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.backupRestoreTools.backupTable(params);
-  }
-
-  async backupDatabase(params: {
-    include_data?: boolean;
-    include_drop?: boolean;
-    tables?: string[];
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("backupDatabase");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.backupRestoreTools.backupDatabase(params);
-  }
-
-  async restoreFromSql(params: {
-    sql_dump: string;
-    stop_on_error?: boolean;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("restoreFromSql");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.backupRestoreTools.restoreFromSql(params);
-  }
-
-  async getCreateTableStatement(params: {
-    table_name: string;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("getCreateTableStatement");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.backupRestoreTools.getCreateTableStatement(params);
-  }
-
-  async getDatabaseSchema(params: {
-    database?: string;
-    include_views?: boolean;
-    include_procedures?: boolean;
-    include_functions?: boolean;
-    include_triggers?: boolean;
-  }) {
-    const check = this.checkToolEnabled("getDatabaseSchema");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.backupRestoreTools.getDatabaseSchema(params);
-  }
-
-  // Data Migration Tools
-  async copyTableData(params: {
-    source_table: string;
-    target_table: string;
-    column_mapping?: Record<string, string>;
-    filters?: any[];
-    batch_size?: number;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("copyTableData");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.migrationTools.copyTableData(params);
-  }
-
-  async moveTableData(params: {
-    source_table: string;
-    target_table: string;
-    column_mapping?: Record<string, string>;
-    filters?: any[];
-    batch_size?: number;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("moveTableData");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.migrationTools.moveTableData(params);
-  }
-
-  async cloneTable(params: {
-    source_table: string;
-    new_table_name: string;
-    include_data?: boolean;
-    include_indexes?: boolean;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("cloneTable");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.migrationTools.cloneTable(params);
-  }
-
-  async compareTableStructure(params: {
-    table1: string;
-    table2: string;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("compareTableStructure");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.migrationTools.compareTableStructure(params);
-  }
-
-  async syncTableData(params: {
-    source_table: string;
-    target_table: string;
-    key_column: string;
-    columns_to_sync?: string[];
-    sync_mode?: "insert_only" | "update_only" | "upsert";
-    batch_size?: number;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("syncTableData");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.migrationTools.syncTableData(params);
   }
 
   // ==========================================
@@ -1379,32 +1204,6 @@ export class MySQLMCP {
     return await this.processTools.explainQuery(params);
   }
 
-  async showEngineStatus(params?: { engine?: string }) {
-    const check = this.checkToolEnabled("showEngineStatus");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.processTools.showEngineStatus(params);
-  }
-
-  async getServerInfo() {
-    const check = this.checkToolEnabled("getServerInfo");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.processTools.getServerInfo();
-  }
-
-  async showBinaryLogs() {
-    const check = this.checkToolEnabled("showBinaryLogs");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.processTools.showBinaryLogs();
-  }
-
-  async showReplicationStatus(params?: {
-    type?: "MASTER" | "REPLICA" | "SLAVE";
-  }) {
-    const check = this.checkToolEnabled("showReplicationStatus");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.processTools.showReplicationStatus(params);
-  }
-
   // ==========================================
   // Performance Monitoring Tools
   // ==========================================
@@ -1413,27 +1212,6 @@ export class MySQLMCP {
     const check = this.checkToolEnabled("getPerformanceMetrics");
     if (!check.enabled) return { status: "error", error: check.error };
     return await this.performanceTools.getPerformanceMetrics();
-  }
-
-  async getTopQueriesByTime(params?: { limit?: number }) {
-    const check = this.checkToolEnabled("getTopQueriesByTime");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.performanceTools.getTopQueriesByTime(params);
-  }
-
-  async getTopQueriesByCount(params?: { limit?: number }) {
-    const check = this.checkToolEnabled("getTopQueriesByCount");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.performanceTools.getTopQueriesByCount(params);
-  }
-
-  async getSlowQueries(params?: {
-    limit?: number;
-    threshold_seconds?: number;
-  }) {
-    const check = this.checkToolEnabled("getSlowQueries");
-    if (!check.enabled) return { status: "error", error: check.error };
-    return await this.performanceTools.getSlowQueries(params);
   }
 
   async getTableIOStats(params?: { limit?: number; table_schema?: string }) {
