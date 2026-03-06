@@ -87,11 +87,9 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   // Utility tools
   describeConnection: ToolCategory.UTILITY,
   testConnection: ToolCategory.UTILITY,
-  getTableRelationships: ToolCategory.UTILITY,
   getAllTablesRelationships: ToolCategory.UTILITY,
   exportTableToCSV: ToolCategory.UTILITY,
   exportQueryToCSV: ToolCategory.UTILITY,
-  safe_export_table: ToolCategory.UTILITY,
   read_changelog: ToolCategory.UTILITY,
 
   // Transaction tools
@@ -182,9 +180,10 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
 
   // Backup and restore tools
   backupTable: ToolCategory.UTILITY,
-  cloneTable: ToolCategory.DDL,
-  compareTableStructure: ToolCategory.LIST,
-  syncTableData: ToolCategory.UPDATE,
+  backupDatabase: ToolCategory.UTILITY,
+  restoreFromSql: ToolCategory.UTILITY,
+  getCreateTableStatement: ToolCategory.UTILITY,
+  getDatabaseSchema: ToolCategory.UTILITY,
 
   // Schema versioning and migrations tools
   initMigrationsTable: ToolCategory.DDL,
@@ -229,7 +228,6 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   listDatabases: DocCategory.DATABASE_DISCOVERY,
   listTables: DocCategory.DATABASE_DISCOVERY,
   readTableSchema: DocCategory.DATABASE_DISCOVERY,
-  getTableRelationships: DocCategory.DATABASE_DISCOVERY,
   getAllTablesRelationships: DocCategory.DATABASE_DISCOVERY,
 
   // CRUD Operations
@@ -358,6 +356,7 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   // Query Optimization
   analyzeQuery: DocCategory.QUERY_OPTIMIZATION,
   getOptimizationHints: DocCategory.QUERY_OPTIMIZATION,
+  repairQuery: DocCategory.QUERY_OPTIMIZATION,
 
   // Backup & Restore
   backupTable: DocCategory.BACKUP_RESTORE,

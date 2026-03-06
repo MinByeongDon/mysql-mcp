@@ -5,6 +5,21 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.38.0] - 2026-03-06
+
+### Fixed
+- **Missing Tool Mapping**: Added `repairQuery` to `toolDocCategoryMap` in `featureConfig.ts` (QUERY_OPTIMIZATION category)
+- **Deprecated Tool Cleanup**: Removed deprecated tools from category mappings:
+  - Removed `getTableRelationships` (replaced by `get_all_tables_relationships`)
+  - Removed `cloneTable`, `compareTableStructure`, `syncTableData` (previously removed in v1.36.0, now cleaned from mappings)
+  - Removed `safe_export_table` (previously removed, now cleaned from mappings)
+- **Backup Tools Mapping**: Added missing backup/restore tools to `toolCategoryMap`: `backupDatabase`, `restoreFromSql`, `getCreateTableStatement`, `getDatabaseSchema`
+
+### Changed
+- Updated `featureConfig.ts` to ensure all 106 tools have proper category mappings
+- Maintained consistency between code implementation and documentation (106 tools, 21 categories)
+- Bumped package version to `1.38.0`
+
 ## [1.37.0] - 2026-03-06
 
 ### Removed
