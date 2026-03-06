@@ -1,8 +1,8 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-03-05 00:00:00
-**Version:** 1.36.0
-**Total Tools:** 117
+**Last Updated:** 2026-03-06 00:00:00
+**Version:** 1.37.0
+**Total Tools:** 106
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
 
@@ -221,21 +221,13 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `configure_cache` - Configure cache settings
 - `clear_cache` - Clear cached results
 
-### 18. Data Export (4 tools)
-- `export_table_to_csv` - Export table to CSV
-- `export_table_to_json` - Export table to JSON
-- `safe_export_table` - Export with PII masking
-
-### 19. Utilities (4 tools)
+### 18. Utilities (4 tools)
 - `test_connection` - Test connectivity
 - `describe_connection` - Connection info
 - `read_changelog` - Read changelog
 - `invalidate_table_cache` - Clear table cache
 
-### 20. Data Import (1 tool)
-- `import_from_json` - Import data from JSON file
-
-### 21. Schema Migrations (9 tools)
+### 19. Schema Migrations (9 tools)
 - `init_migrations_table` - Initialize migrations tracking table
 - `create_migration` - Create a new migration
 - `apply_migrations` - Apply pending migrations

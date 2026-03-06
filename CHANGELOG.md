@@ -5,6 +5,19 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.37.0] - 2026-03-06
+
+### Removed
+- **Documentation Categories**: Removed `import_export` and `data_migration` categories from documentation to reduce bundle size
+- **Import/Export Category** (6 tools): `export_query_to_json`, `export_table_to_json`, `export_table_to_sql`, `import_from_csv`, `import_from_json`, `safe_export_table`
+- **Data Migration Category** (5 tools): `clone_table`, `compare_table_structure`, `copy_table_data`, `move_table_data`, `sync_table_data`
+
+### Changed
+- Updated DOCUMENTATIONS.md to remove Data Export and Data Import sections (117 → 106 tools, 21 → 19 categories)
+- Updated README.md with new tool count (106 tools) and removed categories from Documentation Categories table
+- Updated package description to remove "data import/export" reference
+- Bumped package version to `1.37.0`
+
 ## [1.36.0] - 2026-03-05
 
 ### Removed

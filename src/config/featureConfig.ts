@@ -20,7 +20,7 @@ export enum ToolCategory {
 }
 
 /**
- * Documentation categories from README (21 categories)
+ * Documentation categories from README (19 categories)
  * More intuitive and matches user mental model
  */
 export enum DocCategory {
@@ -43,8 +43,6 @@ export enum DocCategory {
   CACHE_MANAGEMENT = "cache_management",
   QUERY_OPTIMIZATION = "query_optimization",
   BACKUP_RESTORE = "backup_restore",
-  IMPORT_EXPORT = "import_export",
-  DATA_MIGRATION = "data_migration",
   SCHEMA_MIGRATIONS = "schema_migrations",
   ANALYSIS = "analysis",
 }
@@ -368,20 +366,7 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   getCreateTableStatement: DocCategory.BACKUP_RESTORE,
   getDatabaseSchema: DocCategory.BACKUP_RESTORE,
 
-  // Import/Export
-  exportTableToJSON: DocCategory.IMPORT_EXPORT,
-  exportQueryToJSON: DocCategory.IMPORT_EXPORT,
-  exportTableToSql: DocCategory.IMPORT_EXPORT,
-  safe_export_table: DocCategory.IMPORT_EXPORT,
-  importFromCSV: DocCategory.IMPORT_EXPORT,
-  importFromJSON: DocCategory.IMPORT_EXPORT,
 
-  // Data Migration
-  copyTableData: DocCategory.DATA_MIGRATION,
-  moveTableData: DocCategory.DATA_MIGRATION,
-  cloneTable: DocCategory.DATA_MIGRATION,
-  compareTableStructure: DocCategory.DATA_MIGRATION,
-  syncTableData: DocCategory.DATA_MIGRATION,
 
   // Schema Migrations
   initMigrationsTable: DocCategory.SCHEMA_MIGRATIONS,
@@ -432,18 +417,14 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
   create: [
     DocCategory.CRUD_OPERATIONS,
     DocCategory.BULK_OPERATIONS,
-    DocCategory.IMPORT_EXPORT,
-    DocCategory.DATA_MIGRATION,
   ],
   update: [
     DocCategory.CRUD_OPERATIONS,
     DocCategory.BULK_OPERATIONS,
-    DocCategory.DATA_MIGRATION,
   ],
   delete: [
     DocCategory.CRUD_OPERATIONS,
     DocCategory.BULK_OPERATIONS,
-    DocCategory.DATA_MIGRATION,
   ],
   execute: [DocCategory.CUSTOM_QUERIES, DocCategory.SERVER_MANAGEMENT],
   ddl: [
@@ -454,7 +435,6 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.CONSTRAINT_MANAGEMENT,
     DocCategory.TABLE_MAINTENANCE,
     DocCategory.BACKUP_RESTORE,
-    DocCategory.DATA_MIGRATION,
     DocCategory.SCHEMA_MIGRATIONS,
   ],
   utility: [
@@ -464,7 +444,6 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.CACHE_MANAGEMENT,
     DocCategory.QUERY_OPTIMIZATION,
     DocCategory.BACKUP_RESTORE,
-    DocCategory.IMPORT_EXPORT,
   ],
   transaction: [DocCategory.TRANSACTION_MANAGEMENT],
   procedure: [DocCategory.STORED_PROCEDURES, DocCategory.FUNCTIONS_MANAGEMENT],

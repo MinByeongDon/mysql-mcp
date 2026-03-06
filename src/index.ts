@@ -477,54 +477,6 @@ export class MySQLMCP {
     return await this.dataExportTools.exportTableToCSV(params);
   }
 
-  // Extended Data Export Tools (JSON, SQL)
-  async exportTableToJSON(params: {
-    table_name: string;
-    filters?: any[];
-    pagination?: { page: number; limit: number };
-    sorting?: { field: string; direction: "asc" | "desc" };
-    pretty?: boolean;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("exportTableToJSON");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.dataExportTools.exportTableToJSON(params);
-  }
-
-  // Data Import Tools
-  async importFromCSV(params: {
-    table_name: string;
-    csv_data: string;
-    has_headers?: boolean;
-    column_mapping?: Record<string, string>;
-    skip_errors?: boolean;
-    batch_size?: number;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("importFromCSV");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.dataExportTools.importFromCSV(params);
-  }
-
-  async importFromJSON(params: {
-    table_name: string;
-    json_data: string;
-    column_mapping?: Record<string, string>;
-    skip_errors?: boolean;
-    batch_size?: number;
-    database?: string;
-  }) {
-    const check = this.checkToolEnabled("importFromJSON");
-    if (!check.enabled) {
-      return { status: "error", error: check.error };
-    }
-    return await this.dataExportTools.importFromJSON(params);
-  }
-
   // ==========================================
   // Schema Versioning and Migrations Tools
   // ==========================================

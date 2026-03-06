@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-03-05 00:00:00
+**Last Updated:** 2026-03-06 00:00:00
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -264,8 +264,6 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
 | `cache_management` | Manage query cache and optimization | `clear_cache, configure_cache_settings, get_cache_config, get_cache_stats, invalidate_cache_for_table` |
 | `query_optimization` | Analyze and optimize SQL queries | `analyze_query, get_optimization_hints` |
 | `backup_restore` | Create backups and restore databases | `backup_database, backup_table, get_create_table_statement, get_database_schema, restore_from_sql` |
-| `import_export` | Import and export data in various formats | `export_query_to_json, export_table_to_json, export_table_to_sql, import_from_csv, import_from_json, safe_export_table` |
-| `data_migration` | Migrate data between databases or systems | `clone_table, compare_table_structure, copy_table_data, move_table_data, sync_table_data` |
 | `schema_migrations` | Version control for database schema changes | `apply_migrations, create_migration, generate_migration_from_diff, get_migration_status, get_schema_version, init_migrations_table, reset_failed_migration, rollback_migration, validate_migrations` |
 | `analysis` | Data analysis and reporting tools | `get_column_statistics, get_database_summary, get_schema_erd, get_schema_rag_context` |
 
@@ -273,7 +271,7 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
   <summary>Copy/paste list (comma-separated, no spaces)</summary>
 
 ```text
-database_discovery,crud_operations,bulk_operations,custom_queries,schema_management,utilities,transaction_management,stored_procedures,views_management,triggers_management,functions_management,index_management,constraint_management,table_maintenance,server_management,performance_monitoring,cache_management,query_optimization,backup_restore,import_export,data_migration,schema_migrations,analysis
+database_discovery,crud_operations,bulk_operations,custom_queries,schema_management,utilities,transaction_management,stored_procedures,views_management,triggers_management,functions_management,index_management,constraint_management,table_maintenance,server_management,performance_monitoring,cache_management,query_optimization,backup_restore,schema_migrations,analysis
 ```
 
 </details>
@@ -284,7 +282,7 @@ Full category → tool mapping (and examples) lives in **[DOCUMENTATIONS.md → 
 
 ## Available Tools
 
-The server exposes **117 tools** organized into categories (CRUD, schema, migrations, and perf/monitoring).
+The server exposes **106 tools** organized into categories (CRUD, schema, migrations, and perf/monitoring).
 
 - Complete list of tools: **[DOCUMENTATIONS.md → Complete Tools Reference](DOCUMENTATIONS.md#🔧-complete-tools-reference)**
 
