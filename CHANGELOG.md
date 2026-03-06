@@ -5,6 +5,38 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.39.0] - 2026-03-06
+
+### Removed
+- **Schema Migrations Category**: Removed entire `schema_migrations` category and all 9 migration tools to reduce bundle size and simplify the codebase
+  - `init_migrations_table` - Initialize migrations tracking table
+  - `create_migration` - Create a new migration
+  - `apply_migrations` - Apply pending migrations
+  - `rollback_migration` - Rollback a specific migration
+  - `get_migration_status` - Get migration status
+  - `get_schema_version` - Get current schema version
+  - `validate_migrations` - Validate migration files
+  - `reset_failed_migration` - Reset a failed migration
+  - `generate_migration_from_diff` - Generate migration from schema diff
+- **Schema Migrations Tools Module**: Removed `src/tools/schemaVersioningTools.ts` (1,231 lines)
+- **Documentation Category**: Removed `SCHEMA_MIGRATIONS` from `DocCategory` enum in `featureConfig.ts`
+
+### Changed
+- Updated tool count: 106 → 97 tools (-9 tools)
+- Updated category count: 21 → 20 categories (removed `schema_migrations`)
+- Updated `mcp-server.ts` to remove tool registrations and routing for all migration tools
+- Updated `index.ts` to remove MySQLMCP methods and SchemaVersioningTools import
+- Updated `featureConfig.ts` to remove all schema migrations tool mappings
+- Updated README.md and DOCUMENTATIONS.md to reflect tool/category count changes
+- Simplified package description to remove "schema migration" reference
+- Bumped package version to `1.39.0`
+
+### Rationale
+- These tools were rarely used by AI agents
+- Added significant complexity to the codebase
+- Most users prefer external migration tools (Flyway, Liquibase, etc.)
+- Removal reduces bundle size by ~40KB
+
 ## [1.38.0] - 2026-03-06
 
 ### Fixed

@@ -20,7 +20,7 @@ export enum ToolCategory {
 }
 
 /**
- * Documentation categories from README (19 categories)
+ * Documentation categories from README (18 categories)
  * More intuitive and matches user mental model
  */
 export enum DocCategory {
@@ -43,7 +43,6 @@ export enum DocCategory {
   CACHE_MANAGEMENT = "cache_management",
   QUERY_OPTIMIZATION = "query_optimization",
   BACKUP_RESTORE = "backup_restore",
-  SCHEMA_MIGRATIONS = "schema_migrations",
   ANALYSIS = "analysis",
 }
 
@@ -365,19 +364,6 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   getCreateTableStatement: DocCategory.BACKUP_RESTORE,
   getDatabaseSchema: DocCategory.BACKUP_RESTORE,
 
-
-
-  // Schema Migrations
-  initMigrationsTable: DocCategory.SCHEMA_MIGRATIONS,
-  createMigration: DocCategory.SCHEMA_MIGRATIONS,
-  applyMigrations: DocCategory.SCHEMA_MIGRATIONS,
-  rollbackMigration: DocCategory.SCHEMA_MIGRATIONS,
-  getMigrationStatus: DocCategory.SCHEMA_MIGRATIONS,
-  getSchemaVersion: DocCategory.SCHEMA_MIGRATIONS,
-  validateMigrations: DocCategory.SCHEMA_MIGRATIONS,
-  resetFailedMigration: DocCategory.SCHEMA_MIGRATIONS,
-  generateMigrationFromDiff: DocCategory.SCHEMA_MIGRATIONS,
-
   // Analysis
   getDatabaseSummary: DocCategory.ANALYSIS,
   getSchemaERD: DocCategory.ANALYSIS,
@@ -408,7 +394,6 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.CONSTRAINT_MANAGEMENT,
     DocCategory.TABLE_MAINTENANCE,
     DocCategory.SERVER_MANAGEMENT,
-    DocCategory.SCHEMA_MIGRATIONS,
     DocCategory.ANALYSIS,
     DocCategory.UTILITIES,
   ],
@@ -434,7 +419,6 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.CONSTRAINT_MANAGEMENT,
     DocCategory.TABLE_MAINTENANCE,
     DocCategory.BACKUP_RESTORE,
-    DocCategory.SCHEMA_MIGRATIONS,
   ],
   utility: [
     DocCategory.UTILITIES,

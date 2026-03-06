@@ -1,8 +1,8 @@
 # MySQL MCP Server - Documentation
 
 **Last Updated:** 2026-03-06 00:00:00
-**Version:** 1.38.0
-**Total Tools:** 106
+**Version:** 1.39.0
+**Total Tools:** 97
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
 
@@ -226,17 +226,6 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `describe_connection` - Connection info
 - `read_changelog` - Read changelog
 - `invalidate_table_cache` - Clear table cache
-
-### 19. Schema Migrations (9 tools)
-- `init_migrations_table` - Initialize migrations tracking table
-- `create_migration` - Create a new migration
-- `apply_migrations` - Apply pending migrations
-- `rollback_migration` - Rollback a specific migration
-- `get_migration_status` - Get migration status
-- `get_schema_version` - Get current schema version
-- `validate_migrations` - Validate migration files
-- `reset_failed_migration` - Reset a failed migration
-- `generate_migration_from_diff` - Generate migration from schema diff
 
 ---
 
