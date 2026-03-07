@@ -5,6 +5,22 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.4] - 2026-03-07
+
+### Removed
+- **Unused Dependencies**: Removed `winston` and `@types/winston` packages (26 packages total)
+  - `winston` logging library was not used - project uses custom in-memory `QueryLogger` instead
+- **Dead Code**: Removed unused tool modules left from previous refactoring
+  - `src/tools/processTools.ts` - Remnant from removed `server_management` category
+  - `src/tools/performanceTools.ts` - Remnant from removed `performance_monitoring` category
+  - `src/auth/` folder - Empty unused directory
+  - `dist/server.js` and `dist/server.d.ts` - Obsolete build artifacts
+
+### Changed
+- Updated dependencies: 6 → 5 production dependencies (removed winston)
+- Updated devDependencies: 10 → 9 (removed @types/winston)
+- Synchronized version to `1.40.4` in `package.json`
+
 ## [1.40.3] - 2026-03-07
 
 ### Fixed
