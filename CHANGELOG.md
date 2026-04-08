@@ -5,6 +5,17 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.5] - 2026-04-08
+
+### Fixed
+- **Critical Bug in `read_table_schema`**: Fixed query that returned mixed data from multiple schemas
+  - Query was missing `TABLE_SCHEMA` filter, causing columns from tables with same name in different databases to be returned
+  - Added `TABLE_SCHEMA = ?` filter to ensure only columns from the connected database are returned
+  - This fixes the issue where AI agents received incorrect schema information when multiple databases had tables with identical names
+
+### Changed
+- Synchronized version to `1.40.5` in `package.json`, `src/mcp-server.ts`
+
 ## [1.40.4] - 2026-03-07
 
 ### Removed

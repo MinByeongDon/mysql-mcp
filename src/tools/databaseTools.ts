@@ -152,12 +152,14 @@ export class DatabaseTools {
         FROM
           INFORMATION_SCHEMA.COLUMNS
         WHERE
+          TABLE_SCHEMA = ? AND
           TABLE_NAME = ?
         ORDER BY
           ORDINAL_POSITION
       `;
 
       const results = await this.db.query<ColumnInfo[]>(query, [
+        dbConfig.database,
         params.table_name,
       ]);
 
