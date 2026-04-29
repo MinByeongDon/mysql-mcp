@@ -98,7 +98,7 @@ try {
   // Extract username and password from auth
   const auth =
     url.username && url.password
-      ? { user: url.username, password: url.password }
+      ? { user: url.username, password: decodeURIComponent(url.password) }
       : { user: url.username || "root", password: url.password || "" };
 
   connectionConfig = {
