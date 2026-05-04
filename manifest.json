@@ -1,7 +1,7 @@
 {
   "name": "mysql-mcp",
   "description": "A Model Context Protocol for MySQL database interaction",
-  "version": "1.40.4",
+  "version": "1.40.6",
   "tools": [
     {
       "name": "list_databases",
@@ -346,6 +346,17 @@
             "type": "string"
           }
         }
+      }
+    },
+    {
+      "name": "cursor_execute_request",
+      "description": "Cursor compatibility bridge for clients that cannot send MCP tool arguments. Reads .cursor/mysql-mcp-request.json or MYSQL_MCP_CURSOR_REQUEST_FILE and dispatches to an existing MySQL MCP tool.",
+      "input_schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "output_schema": {
+        "type": "object"
       }
     },
     {

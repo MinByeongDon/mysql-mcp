@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import fs from "fs";
+import path from "path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -670,6 +672,15 @@ const TOOLS: Tool[] = [
   {
     name: "describe_connection",
     description: "Returns current database connection details: host, database name, user, port, and connection status. Use to verify which database you're connected to.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "cursor_execute_request",
+    description:
+      "Cursor compatibility bridge for clients that can call MCP tools but cannot send arguments. Reads .cursor/mysql-mcp-request.json (or MYSQL_MCP_CURSOR_REQUEST_FILE) and dispatches to the requested MySQL MCP tool. The request file supports {\"tool\":\"execute_ddl\",\"arguments\":{\"query\":\"DROP TABLE IF EXISTS t;\"}} or direct SQL with {\"query\":\"...\",\"mode\":\"auto\"}.",
     inputSchema: {
       type: "object",
       properties: {},
@@ -1925,7 +1936,7 @@ const TOOLS: Tool[] = [
 const server = new Server(
   {
     name: "mysql-mcp-server",
-    version: "1.40.5",
+    version: "1.40.6",
   },
   {
     capabilities: {
@@ -1947,6 +1958,135 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: enabledTools,
   };
 });
+
+type CursorRequestMode = "auto" | "select" | "write" | "ddl";
+
+interface CursorBridgeRequest {
+  tool?: string;
+  toolName?: string;
+  name?: string;
+  arguments?: Record<string, any>;
+  args?: Record<string, any>;
+  query?: string;
+  params?: any[];
+  mode?: CursorRequestMode;
+  dry_run?: boolean;
+}
+
+const TOOL_METHOD_OVERRIDES: Record<string, string> = {
+  get_schema_erd: "getSchemaERD",
+  export_table_to_csv: "exportTableToCSV",
+  export_query_to_csv: "exportQueryToCSV",
+};
+
+const toCamelCase = (value: string): string =>
+  value.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+
+const getCursorRequestFilePath = (): string => {
+  const configuredPath =
+    process.env.MYSQL_MCP_CURSOR_REQUEST_FILE ||
+    process.env.MCP_MYSQL_REQUEST_FILE ||
+    ".cursor/mysql-mcp-request.json";
+
+  return path.isAbsolute(configuredPath)
+    ? configuredPath
+    : path.resolve(process.cwd(), configuredPath);
+};
+
+const inferSqlToolName = (query: string, mode: CursorRequestMode = "auto"): string => {
+  const upperQuery = query.trim().toUpperCase();
+
+  if (mode === "select") return "run_select_query";
+  if (mode === "write") return "execute_write_query";
+  if (mode === "ddl") return "execute_ddl";
+
+  if (/^(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b/.test(upperQuery)) {
+    return "execute_ddl";
+  }
+
+  if (/^(INSERT|UPDATE|DELETE|REPLACE)\b/.test(upperQuery)) {
+    return "execute_write_query";
+  }
+
+  if (/^(SELECT|WITH)\b/.test(upperQuery)) {
+    return "run_select_query";
+  }
+
+  throw new Error(
+    "Unable to infer SQL tool. Set mode to one of: select, write, ddl.",
+  );
+};
+
+const executeToolByName = async (
+  toolName: string,
+  args: Record<string, any> = {},
+): Promise<any> => {
+  const knownToolNames = new Set(TOOLS.map((tool) => tool.name));
+
+  if (!knownToolNames.has(toolName)) {
+    throw new Error(`Unknown tool for Cursor bridge: ${toolName}`);
+  }
+
+  if (toolName === "cursor_execute_request") {
+    throw new Error("cursor_execute_request cannot dispatch to itself");
+  }
+
+  const methodName = TOOL_METHOD_OVERRIDES[toolName] || toCamelCase(toolName);
+  const method = (mysqlMCP as any)[methodName];
+
+  if (typeof method !== "function") {
+    throw new Error(`No handler method found for Cursor bridge tool: ${toolName}`);
+  }
+
+  return await method.call(mysqlMCP, args);
+};
+
+const executeCursorRequest = async (): Promise<any> => {
+  const requestFilePath = getCursorRequestFilePath();
+
+  if (!fs.existsSync(requestFilePath)) {
+    return {
+      status: "error",
+      error:
+        `Cursor request file not found: ${requestFilePath}. ` +
+        'Create it with JSON like {"tool":"execute_ddl","arguments":{"query":"DROP TABLE IF EXISTS spark_processes;"}}',
+    };
+  }
+
+  let request: CursorBridgeRequest;
+  try {
+    request = JSON.parse(fs.readFileSync(requestFilePath, "utf8"));
+  } catch (error: any) {
+    return {
+      status: "error",
+      error: `Failed to read Cursor request file: ${error.message}`,
+    };
+  }
+
+  const requestedTool = request.tool || request.toolName || request.name;
+
+  if (requestedTool) {
+    return await executeToolByName(
+      requestedTool,
+      request.arguments || request.args || {},
+    );
+  }
+
+  if (request.query) {
+    const inferredTool = inferSqlToolName(request.query, request.mode || "auto");
+    return await executeToolByName(inferredTool, {
+      query: request.query,
+      params: request.params,
+      dry_run: request.dry_run,
+    });
+  }
+
+  return {
+    status: "error",
+    error:
+      "Cursor request must contain either tool/toolName/name with arguments, or query with optional mode.",
+  };
+};
 
 // Handle tool call requests
 server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
@@ -2129,6 +2269,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
 
       case "describe_connection":
         result = await mysqlMCP.describeConnection();
+        break;
+
+      case "cursor_execute_request":
+        result = await executeCursorRequest();
         break;
 
       case "test_connection":

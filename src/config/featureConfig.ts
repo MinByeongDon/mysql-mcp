@@ -82,6 +82,8 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
 
   // Utility tools
   describeConnection: ToolCategory.UTILITY,
+  cursorExecuteRequest: ToolCategory.UTILITY,
+  cursor_execute_request: ToolCategory.UTILITY,
   testConnection: ToolCategory.UTILITY,
   getAllTablesRelationships: ToolCategory.UTILITY,
   exportTableToCSV: ToolCategory.UTILITY,
@@ -199,6 +201,8 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   // Utilities
   testConnection: DocCategory.UTILITIES,
   describeConnection: DocCategory.UTILITIES,
+  cursorExecuteRequest: DocCategory.UTILITIES,
+  cursor_execute_request: DocCategory.UTILITIES,
   exportTableToCSV: DocCategory.UTILITIES,
   exportTableToCsv: DocCategory.UTILITIES,
   export_table_to_csv: DocCategory.UTILITIES,

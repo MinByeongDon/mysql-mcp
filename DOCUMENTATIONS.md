@@ -1,8 +1,8 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-04-08 14:30:00
-**Version:** 1.40.5
-**Total Tools:** 62
+**Last Updated:** 2026-05-04 18:07:52
+**Version:** 1.40.6
+**Total Tools:** 79
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
 
@@ -62,6 +62,34 @@ Configure MySQL MCP with two access-control layers:
   }
 }
 ```
+
+---
+
+### Cursor Compatibility Bridge
+
+Some Cursor MCP wrappers can call a tool by name but cannot pass `arguments`. For that flow, write a request file at `.cursor/mysql-mcp-request.json` and call the no-argument `cursor_execute_request` tool.
+
+Execute any existing MCP tool:
+
+```json
+{
+  "tool": "execute_ddl",
+  "arguments": {
+    "query": "DROP TABLE IF EXISTS spark_processes;"
+  }
+}
+```
+
+Or execute SQL directly with automatic routing:
+
+```json
+{
+  "query": "DROP TABLE IF EXISTS spark_processes;",
+  "mode": "auto"
+}
+```
+
+Supported `mode` values are `auto`, `select`, `write`, and `ddl`. Set `MYSQL_MCP_CURSOR_REQUEST_FILE` to override the request file path.
 
 ---
 
@@ -191,11 +219,12 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `get_optimization_hints` - Get optimizer hints
 - `repair_query` - Repair broken SQL queries
 
-### 14. Utilities (4 tools)
+### 14. Utilities (5 tools)
 - `test_connection` - Test connectivity
 - `describe_connection` - Connection info
 - `read_changelog` - Read changelog
 - `invalidate_table_cache` - Clear table cache
+- `cursor_execute_request` - Execute a file-backed request for clients that cannot send MCP arguments
 
 ---
 

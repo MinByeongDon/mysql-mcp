@@ -5,6 +5,16 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.6] - 2026-05-04
+
+### Added
+- Added `cursor_execute_request`, a no-argument compatibility bridge for Cursor MCP wrappers that cannot send tool `arguments`.
+- The bridge reads `.cursor/mysql-mcp-request.json` or `MYSQL_MCP_CURSOR_REQUEST_FILE` and dispatches to existing MCP tools or auto-routes SQL to SELECT, write, or DDL execution.
+
+### Changed
+- Updated tool totals in documentation to include the Cursor bridge.
+- Synchronized version metadata to `1.40.6`.
+
 ## [1.40.5] - 2026-04-08
 
 ### Fixed

@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-04-08 14:30:00
+**Last Updated:** 2026-05-04 18:07:52
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -211,6 +211,32 @@ For more client-specific config snippets, see **[DOCUMENTATIONS.md → Setup & C
 
 ---
 
+### Cursor Compatibility Bridge
+
+If a Cursor MCP wrapper can call tools but cannot send `arguments`, use the no-argument `cursor_execute_request` bridge. Create `.cursor/mysql-mcp-request.json` in the workspace, then call `cursor_execute_request`:
+
+```json
+{
+  "tool": "execute_ddl",
+  "arguments": {
+    "query": "DROP TABLE IF EXISTS spark_processes;"
+  }
+}
+```
+
+For direct SQL, the bridge can infer the right SQL tool:
+
+```json
+{
+  "query": "DROP TABLE IF EXISTS spark_processes;",
+  "mode": "auto"
+}
+```
+
+Set `MYSQL_MCP_CURSOR_REQUEST_FILE` to override the request file path.
+
+---
+
 ## Permission System
 
 Control database access with a **dual-layer filtering system** that provides both broad and fine-grained control:
@@ -250,7 +276,7 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
 | `bulk_operations` | High-performance batch processing operations | `bulk_delete, bulk_insert, bulk_update` |
 | `custom_queries` | Execute custom SQL queries and advanced operations | `execute_write_query, run_select_query` |
 | `schema_management` | Manage database schema, tables, and structure | `alter_table, create_table, drop_table, execute_ddl` |
-| `utilities` | Database utilities, diagnostics, and helper functions | `describe_connection, export_query_to_csv, export_table_to_csv, list_all_tools, read_changelog, test_connection` |
+| `utilities` | Database utilities, diagnostics, and helper functions | `cursor_execute_request, describe_connection, export_query_to_csv, export_table_to_csv, list_all_tools, read_changelog, test_connection` |
 | `transaction_management` | Handle ACID transactions and rollback operations | `begin_transaction, commit_transaction, execute_in_transaction, get_transaction_status, rollback_transaction` |
 | `stored_procedures` | Create, execute, and manage stored procedures | `create_stored_procedure, drop_stored_procedure, execute_stored_procedure, get_stored_procedure_info, list_stored_procedures, show_create_procedure` |
 | `views_management` | Create and manage database views | `alter_view, create_view, drop_view, get_view_info, list_views, show_create_view` |
@@ -276,7 +302,7 @@ Full category → tool mapping (and examples) lives in **[DOCUMENTATIONS.md → 
 
 ## Available Tools
 
-The server exposes **62 tools** organized into categories (CRUD, schema, and utilities).
+The server exposes **79 tools** organized into categories (CRUD, schema, and utilities).
 
 - Complete list of tools: **[DOCUMENTATIONS.md → Complete Tools Reference](DOCUMENTATIONS.md#🔧-complete-tools-reference)**
 
