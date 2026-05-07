@@ -29,6 +29,11 @@ export function validateToolArguments(
       case "execute_write_query":
       case "execute_ddl":
         return validateQuery({ query: args?.query || "" });
+      case "export_query_to_csv":
+        return validateQuery({
+          query: args?.query || "",
+          params: args?.params,
+        });
       case "bulk_insert":
         return validateBulkInsert(args);
       case "list_tables":

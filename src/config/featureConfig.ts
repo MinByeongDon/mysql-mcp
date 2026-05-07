@@ -49,7 +49,8 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   listDatabases: ToolCategory.LIST,
   listTables: ToolCategory.LIST,
   readTableSchema: ToolCategory.LIST,
-  list_all_tools: ToolCategory.LIST,
+  listAllTools: ToolCategory.UTILITY,
+  list_all_tools: ToolCategory.UTILITY,
   // Analysis tools (added here to group with database tools)
   getDatabaseSummary: ToolCategory.LIST,
   getSchemaERD: ToolCategory.LIST,
@@ -210,6 +211,7 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   exportQueryToCsv: DocCategory.UTILITIES,
   export_query_to_csv: DocCategory.UTILITIES,
   read_changelog: DocCategory.UTILITIES,
+  listAllTools: DocCategory.UTILITIES,
   list_all_tools: DocCategory.UTILITIES,
 
   // Transaction Management

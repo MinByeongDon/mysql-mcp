@@ -1,7 +1,7 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-05-04 18:07:52
-**Version:** 1.40.6
+**Last Updated:** 2026-05-06 22:38:42
+**Version:** 1.40.7
 **Total Tools:** 79
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
@@ -93,6 +93,14 @@ Supported `mode` values are `auto`, `select`, `write`, and `ddl`. Set `MYSQL_MCP
 
 ---
 
+### AI Agent Tool Discovery
+
+Use `list_all_tools` first when connecting from Codex, Claude Code CLI, Cursor, Droid CLI, or other MCP agents. It returns the live runtime catalog from the server, enabled/disabled status for each tool, the active permission/category profile, and recommended workflows for common agent tasks.
+
+For CSV exports, use `export_table_to_csv` for table-based exports and `export_query_to_csv` for SELECT query exports.
+
+---
+
 ## Permission System
 
 ### Available Permissions
@@ -120,12 +128,11 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 
 ## Tool Categories
 
-### 1. Database Discovery (5 tools)
+### 1. Database Discovery (4 tools)
 - `list_databases` - List all databases
 - `list_tables` - List tables in database
 - `read_table_schema` - Get table structure
 - `get_all_tables_relationships` - Get all FK relationships
-- `list_all_tools` - List available MCP tools
 
 ### 2. Analysis (4 tools)
 - `get_database_summary` - Database overview with statistics
@@ -153,7 +160,11 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_table` - Delete tables
 - `execute_ddl` - Execute raw DDL
 
-### 6. Index Management (10 tools)
+### 6. Data Export (2 tools)
+- `export_table_to_csv` - Export table data to CSV
+- `export_query_to_csv` - Export SELECT query results to CSV
+
+### 7. Index Management (10 tools)
 - `list_indexes` - List table indexes
 - `get_index_info` - Get index details
 - `create_index` - Create indexes
@@ -165,7 +176,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `get_fulltext_stats` - Get FULLTEXT index statistics
 - `optimize_fulltext` - Optimize FULLTEXT indexes
 
-### 7. Constraint Management (7 tools)
+### 8. Constraint Management (7 tools)
 - `list_foreign_keys` - List foreign keys
 - `list_constraints` - List all constraints
 - `add_foreign_key` - Add foreign key
@@ -174,7 +185,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_constraint` - Remove constraint
 - `add_check_constraint` - Add check constraint
 
-### 8. Stored Procedures (6 tools)
+### 9. Stored Procedures (6 tools)
 - `list_stored_procedures` - List procedures
 - `get_stored_procedure_info` - Get procedure details
 - `execute_stored_procedure` - Execute procedures
@@ -182,7 +193,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_stored_procedure` - Remove procedures
 - `show_create_procedure` - Show CREATE statement
 
-### 9. Views Management (6 tools)
+### 10. Views Management (6 tools)
 - `list_views` - List views
 - `get_view_info` - Get view details
 - `create_view` - Create views
@@ -190,14 +201,14 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_view` - Remove views
 - `show_create_view` - Show CREATE statement
 
-### 10. Triggers Management (5 tools)
+### 11. Triggers Management (5 tools)
 - `list_triggers` - List triggers
 - `get_trigger_info` - Get trigger details
 - `create_trigger` - Create triggers
 - `drop_trigger` - Remove triggers
 - `show_create_trigger` - Show CREATE statement
 
-### 11. Table Maintenance (8 tools)
+### 12. Table Maintenance (8 tools)
 - `analyze_table` - Update statistics
 - `optimize_table` - Reclaim space
 - `check_table` - Check for errors
@@ -207,24 +218,24 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `flush_table` - Close/reopen table
 - `get_table_size` - Get size information
 
-### 12. Transaction Management (5 tools)
+### 13. Transaction Management (5 tools)
 - `begin_transaction` - Start transaction
 - `commit_transaction` - Commit transaction
 - `rollback_transaction` - Rollback transaction
 - `get_transaction_status` - Check transaction state
 - `execute_in_transaction` - Execute within transaction
 
-### 13. Query Optimization (3 tools)
+### 14. Query Optimization (3 tools)
 - `analyze_query` - Analyze query performance
 - `get_optimization_hints` - Get optimizer hints
 - `repair_query` - Repair broken SQL queries
 
-### 14. Utilities (5 tools)
+### 15. Utilities (5 tools)
 - `test_connection` - Test connectivity
 - `describe_connection` - Connection info
 - `read_changelog` - Read changelog
-- `invalidate_table_cache` - Clear table cache
 - `cursor_execute_request` - Execute a file-backed request for clients that cannot send MCP arguments
+- `list_all_tools` - Runtime tool catalog with agent guidance
 
 ---
 

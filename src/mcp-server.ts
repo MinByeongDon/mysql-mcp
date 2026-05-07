@@ -18,6 +18,8 @@ import { validateToolArguments } from "./tools/toolArgumentValidation.js";
 // Layer 2 (Categories): MCP_CATEGORIES (optional, for fine-grained control)
 const permissions = process.env.MCP_PERMISSIONS || process.env.MCP_CONFIG || "";
 const categories = process.env.MCP_CATEGORIES || "";
+const SERVER_NAME = "mysql-mcp-server";
+const SERVER_VERSION = "1.40.7";
 
 // Declare the MySQL MCP instance (will be initialized in main())
 let mysqlMCP: MySQLMCP;
@@ -1935,8 +1937,8 @@ const TOOLS: Tool[] = [
 // Create the MCP server
 const server = new Server(
   {
-    name: "mysql-mcp-server",
-    version: "1.40.6",
+    name: SERVER_NAME,
+    version: SERVER_VERSION,
   },
   {
     capabilities: {
@@ -1981,6 +1983,22 @@ const TOOL_METHOD_OVERRIDES: Record<string, string> = {
 
 const toCamelCase = (value: string): string =>
   value.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+
+const getRuntimeToolCatalog = () => {
+  const enabledTools = getEnabledTools(mysqlMCP, TOOLS);
+
+  return {
+    tools: TOOLS.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.inputSchema,
+    })),
+    enabledToolNames: enabledTools.map((tool) => tool.name),
+    accessProfile: mysqlMCP.getAccessProfile(),
+    serverName: SERVER_NAME,
+    serverVersion: SERVER_VERSION,
+  };
+};
 
 const getCursorRequestFilePath = (): string => {
   const configuredPath =
@@ -2029,6 +2047,17 @@ const executeToolByName = async (
 
   if (toolName === "cursor_execute_request") {
     throw new Error("cursor_execute_request cannot dispatch to itself");
+  }
+
+  const validation = validateToolArguments(toolName, args);
+  if (!validation.valid) {
+    throw new Error(
+      `Validation Error: ${validation.errors?.join(", ") || "Invalid arguments"}`,
+    );
+  }
+
+  if (toolName === "list_all_tools") {
+    return await mysqlMCP.listAllTools(getRuntimeToolCatalog());
   }
 
   const methodName = TOOL_METHOD_OVERRIDES[toolName] || toCamelCase(toolName);
@@ -2280,7 +2309,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
         break;
 
       case "list_all_tools":
-        result = await mysqlMCP.listAllTools();
+        result = await mysqlMCP.listAllTools(getRuntimeToolCatalog());
         break;
 
       case "read_changelog":
@@ -2374,6 +2403,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       // Data Export Tools
       case "export_table_to_csv":
         result = await mysqlMCP.exportTableToCSV((args || {}) as any);
+        break;
+
+      case "export_query_to_csv":
+        result = await mysqlMCP.exportQueryToCSV(
+          (args || {}) as {
+            query: string;
+            params?: any[];
+            include_headers?: boolean;
+          },
+        );
         break;
 
       // Query Optimization Tools

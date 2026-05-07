@@ -187,7 +187,7 @@ export class MySQLMCP {
     }
 
     // Additional security check
-    if (!this.security.isReadOnlyQuery(params.query)) {
+    if (!this.security.isReadOnlyQuery(params.query, this.security.hasExecutePermission())) {
       return {
         status: "error",
         error:
@@ -317,12 +317,24 @@ export class MySQLMCP {
     return await this.utilityTools.readChangelog(params);
   }
 
-  async listAllTools() {
+  async listAllTools(params?: {
+    tools?: Array<{
+      name: string;
+      description?: string;
+      inputSchema?: any;
+      input_schema?: any;
+      output_schema?: any;
+    }>;
+    enabledToolNames?: string[];
+    accessProfile?: any;
+    serverName?: string;
+    serverVersion?: string;
+  }) {
     const check = this.checkToolEnabled("list_all_tools");
     if (!check.enabled) {
       return { status: "error", error: check.error };
     }
-    return await this.utilityTools.listAllTools();
+    return await this.utilityTools.listAllTools(params);
   }
 
   // Transaction Tools
@@ -363,7 +375,7 @@ export class MySQLMCP {
     query: string;
     params?: any[];
   }) {
-    const check = this.checkToolEnabled("executeWriteQuery"); // Use executeWriteQuery permission for transaction queries
+    const check = this.checkToolEnabled("executeInTransaction");
     if (!check.enabled) {
       return { status: "error", error: check.error };
     }
@@ -456,6 +468,18 @@ export class MySQLMCP {
       return { status: "error", error: check.error };
     }
     return await this.dataExportTools.exportTableToCSV(params);
+  }
+
+  async exportQueryToCSV(params: {
+    query: string;
+    params?: any[];
+    include_headers?: boolean;
+  }) {
+    const check = this.checkToolEnabled("exportQueryToCSV");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.dataExportTools.exportQueryToCSV(params);
   }
 
   // AI Productivity Tools

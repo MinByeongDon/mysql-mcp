@@ -62,6 +62,41 @@ export class DdlTools {
     return `'${String(defaultValue).replace(/\\/g, "\\\\").replace(/'/g, "''")}'`;
   }
 
+  private validateColumnType(columnType: string): { valid: boolean; error?: string } {
+    if (!columnType || typeof columnType !== "string") {
+      return { valid: false, error: "Column type must be a non-empty string" };
+    }
+
+    const normalizedType = columnType.trim().replace(/\s+/g, " ");
+    if (normalizedType.length > 128) {
+      return { valid: false, error: "Column type is too long" };
+    }
+
+    const safeTypePattern =
+      /^(?:(?:TINY|SMALL|MEDIUM|BIG)?INT(?:EGER)?|DECIMAL|NUMERIC|FLOAT|DOUBLE(?: PRECISION)?|REAL|BIT|BOOL(?:EAN)?|CHAR|VARCHAR|BINARY|VARBINARY|TINYTEXT|TEXT|MEDIUMTEXT|LONGTEXT|TINYBLOB|BLOB|MEDIUMBLOB|LONGBLOB|DATE|DATETIME|TIMESTAMP|TIME|YEAR|JSON)(?:\s*\(\s*\d+(?:\s*,\s*\d+)?\s*\))?(?:\s+(?:UNSIGNED|ZEROFILL))*$/i;
+
+    if (!safeTypePattern.test(normalizedType)) {
+      return {
+        valid: false,
+        error:
+          "Invalid or unsupported column type. Use a standard MySQL data type such as INT, VARCHAR(255), DECIMAL(10,2), TEXT, DATETIME, or JSON.",
+      };
+    }
+
+    return { valid: true };
+  }
+
+  private validateIdentifier(identifier: string, label: string): { valid: boolean; error?: string } {
+    const validation = this.security.validateIdentifier(identifier);
+    if (!validation.valid) {
+      return {
+        valid: false,
+        error: `Invalid ${label}: ${validation.error}`,
+      };
+    }
+    return { valid: true };
+  }
+
   /**
    * Create a new table
    */
@@ -88,10 +123,31 @@ export class DdlTools {
     try {
       const { table_name, columns, indexes } = params;
 
+      const tableValidation = this.validateIdentifier(table_name, "table name");
+      if (!tableValidation.valid) {
+        return { status: "error", error: tableValidation.error };
+      }
+
+      if (!Array.isArray(columns) || columns.length === 0) {
+        return { status: "error", error: "At least one column is required" };
+      }
+
+      const escapedTableName = this.security.escapeIdentifier(table_name);
+
       // Build column definitions
       const columnDefs = columns
         .map((col) => {
-          let def = `\`${col.name}\` ${col.type}`;
+          const columnValidation = this.validateIdentifier(col.name, "column name");
+          if (!columnValidation.valid) {
+            throw new Error(columnValidation.error);
+          }
+
+          const typeValidation = this.validateColumnType(col.type);
+          if (!typeValidation.valid) {
+            throw new Error(`Invalid column type for '${col.name}': ${typeValidation.error}`);
+          }
+
+          let def = `${this.security.escapeIdentifier(col.name)} ${col.type.trim()}`;
 
           if (col.nullable === false) {
             def += " NOT NULL";
@@ -116,7 +172,7 @@ export class DdlTools {
         .join(", ");
 
       // Build the CREATE TABLE query
-      let query = `CREATE TABLE \`${table_name}\` (${columnDefs})`;
+      let query = `CREATE TABLE ${escapedTableName} (${columnDefs})`;
 
       // Execute the query
       await this.db.query(query);
@@ -125,9 +181,24 @@ export class DdlTools {
       let queryCount = 1;
       if (indexes && indexes.length > 0) {
         for (const index of indexes) {
+          const indexValidation = this.validateIdentifier(index.name, "index name");
+          if (!indexValidation.valid) {
+            return { status: "error", error: indexValidation.error };
+          }
+
+          if (!Array.isArray(index.columns) || index.columns.length === 0) {
+            return { status: "error", error: "Index columns are required" };
+          }
+
           const indexType = index.unique ? "UNIQUE INDEX" : "INDEX";
-          const indexColumns = index.columns.map((c) => `\`${c}\``).join(", ");
-          const indexQuery = `CREATE ${indexType} \`${index.name}\` ON \`${table_name}\` (${indexColumns})`;
+          const indexColumns = index.columns.map((c) => {
+            const columnValidation = this.validateIdentifier(c, "index column name");
+            if (!columnValidation.valid) {
+              throw new Error(columnValidation.error);
+            }
+            return this.security.escapeIdentifier(c);
+          }).join(", ");
+          const indexQuery = `CREATE ${indexType} ${this.security.escapeIdentifier(index.name)} ON ${escapedTableName} (${indexColumns})`;
           await this.db.query(indexQuery);
           queryCount++;
         }
@@ -178,8 +249,19 @@ export class DdlTools {
     try {
       const { table_name, operations } = params;
 
+      const tableValidation = this.validateIdentifier(table_name, "table name");
+      if (!tableValidation.valid) {
+        return { status: "error", error: tableValidation.error };
+      }
+
+      if (!Array.isArray(operations) || operations.length === 0) {
+        return { status: "error", error: "At least one alter operation is required" };
+      }
+
+      const escapedTableName = this.security.escapeIdentifier(table_name);
+
       for (const op of operations) {
-        let query = `ALTER TABLE \`${table_name}\``;
+        let query = `ALTER TABLE ${escapedTableName}`;
 
         switch (op.type) {
           case "add_column":
@@ -189,7 +271,11 @@ export class DdlTools {
                 error: "column_name and column_type required for add_column",
               };
             }
-            query += ` ADD COLUMN \`${op.column_name}\` ${op.column_type}`;
+            const addColumnValidation = this.validateIdentifier(op.column_name, "column name");
+            if (!addColumnValidation.valid) return { status: "error", error: addColumnValidation.error };
+            const addTypeValidation = this.validateColumnType(op.column_type);
+            if (!addTypeValidation.valid) return { status: "error", error: addTypeValidation.error };
+            query += ` ADD COLUMN ${this.security.escapeIdentifier(op.column_name)} ${op.column_type.trim()}`;
             if (op.nullable === false) query += " NOT NULL";
             if (op.default !== undefined) {
               // SECURITY: Properly sanitize default values to prevent SQL injection
@@ -205,7 +291,9 @@ export class DdlTools {
                 error: "column_name required for drop_column",
               };
             }
-            query += ` DROP COLUMN \`${op.column_name}\``;
+            const dropColumnValidation = this.validateIdentifier(op.column_name, "column name");
+            if (!dropColumnValidation.valid) return { status: "error", error: dropColumnValidation.error };
+            query += ` DROP COLUMN ${this.security.escapeIdentifier(op.column_name)}`;
             break;
 
           case "modify_column":
@@ -215,7 +303,11 @@ export class DdlTools {
                 error: "column_name and column_type required for modify_column",
               };
             }
-            query += ` MODIFY COLUMN \`${op.column_name}\` ${op.column_type}`;
+            const modifyColumnValidation = this.validateIdentifier(op.column_name, "column name");
+            if (!modifyColumnValidation.valid) return { status: "error", error: modifyColumnValidation.error };
+            const modifyTypeValidation = this.validateColumnType(op.column_type);
+            if (!modifyTypeValidation.valid) return { status: "error", error: modifyTypeValidation.error };
+            query += ` MODIFY COLUMN ${this.security.escapeIdentifier(op.column_name)} ${op.column_type.trim()}`;
             if (op.nullable === false) query += " NOT NULL";
             if (op.default !== undefined) {
               // SECURITY: Properly sanitize default values to prevent SQL injection
@@ -232,7 +324,13 @@ export class DdlTools {
                   "column_name, new_column_name, and column_type required for rename_column",
               };
             }
-            query += ` CHANGE COLUMN \`${op.column_name}\` \`${op.new_column_name}\` ${op.column_type}`;
+            const oldColumnValidation = this.validateIdentifier(op.column_name, "column name");
+            if (!oldColumnValidation.valid) return { status: "error", error: oldColumnValidation.error };
+            const newColumnValidation = this.validateIdentifier(op.new_column_name, "new column name");
+            if (!newColumnValidation.valid) return { status: "error", error: newColumnValidation.error };
+            const renameTypeValidation = this.validateColumnType(op.column_type);
+            if (!renameTypeValidation.valid) return { status: "error", error: renameTypeValidation.error };
+            query += ` CHANGE COLUMN ${this.security.escapeIdentifier(op.column_name)} ${this.security.escapeIdentifier(op.new_column_name)} ${op.column_type.trim()}`;
             break;
 
           case "add_index":
@@ -242,9 +340,17 @@ export class DdlTools {
                 error: "index_name and index_columns required for add_index",
               };
             }
+            const addIndexValidation = this.validateIdentifier(op.index_name, "index name");
+            if (!addIndexValidation.valid) return { status: "error", error: addIndexValidation.error };
             const indexType = op.unique ? "UNIQUE INDEX" : "INDEX";
-            const columns = op.index_columns.map((c) => `\`${c}\``).join(", ");
-            query += ` ADD ${indexType} \`${op.index_name}\` (${columns})`;
+            const columns = op.index_columns.map((c) => {
+              const columnValidation = this.validateIdentifier(c, "index column name");
+              if (!columnValidation.valid) {
+                throw new Error(columnValidation.error);
+              }
+              return this.security.escapeIdentifier(c);
+            }).join(", ");
+            query += ` ADD ${indexType} ${this.security.escapeIdentifier(op.index_name)} (${columns})`;
             break;
 
           case "drop_index":
@@ -254,7 +360,9 @@ export class DdlTools {
                 error: "index_name required for drop_index",
               };
             }
-            query += ` DROP INDEX \`${op.index_name}\``;
+            const dropIndexValidation = this.validateIdentifier(op.index_name, "index name");
+            if (!dropIndexValidation.valid) return { status: "error", error: dropIndexValidation.error };
+            query += ` DROP INDEX ${this.security.escapeIdentifier(op.index_name)}`;
             break;
 
           default:
@@ -297,8 +405,13 @@ export class DdlTools {
     try {
       const { table_name, if_exists } = params;
 
+      const tableValidation = this.validateIdentifier(table_name, "table name");
+      if (!tableValidation.valid) {
+        return { status: "error", error: tableValidation.error };
+      }
+
       const ifExistsClause = if_exists ? "IF EXISTS " : "";
-      const query = `DROP TABLE ${ifExistsClause}\`${table_name}\``;
+      const query = `DROP TABLE ${ifExistsClause}${this.security.escapeIdentifier(table_name)}`;
 
       await this.db.query(query);
 
@@ -328,14 +441,17 @@ export class DdlTools {
     try {
       const { query } = params;
 
-      // Basic validation - ensure it's a DDL query
-      const upperQuery = query.trim().toUpperCase();
-      const isDdl =
-        upperQuery.startsWith("CREATE") ||
-        upperQuery.startsWith("ALTER") ||
-        upperQuery.startsWith("DROP") ||
-        upperQuery.startsWith("TRUNCATE") ||
-        upperQuery.startsWith("RENAME");
+      const queryValidation = this.security.validateQuery(query);
+      if (!queryValidation.valid) {
+        return {
+          status: "error",
+          error: `DDL validation failed: ${queryValidation.error}`,
+        };
+      }
+
+      const isDdl = ["CREATE", "ALTER", "DROP", "TRUNCATE", "RENAME"].includes(
+        queryValidation.queryType || "",
+      );
 
       if (!isDdl) {
         return {

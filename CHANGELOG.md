@@ -5,6 +5,19 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.7] - 2026-05-06
+
+### Added
+- Implemented `export_query_to_csv` end-to-end for SELECT query CSV exports.
+- Enhanced `list_all_tools` with a live runtime tool catalog, enabled/disabled status, access profile, and AI-agent workflow guidance.
+
+### Fixed
+- Fixed `export_query_to_csv` being advertised but failing with `Unknown tool`.
+- Fixed `list_all_tools` returning stale manifest data instead of the active MCP tool catalog.
+- Fixed `execute_in_transaction` permission checks to match its advertised transaction permission.
+- Hardened DDL tools by validating raw DDL statements and checking structured table, column, and index inputs before building SQL.
+- Added argument validation for Cursor bridge dispatches.
+
 ## [1.40.6] - 2026-05-04
 
 ### Added

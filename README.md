@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-05-04 18:07:52
+**Last Updated:** 2026-05-06 22:38:42
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -234,6 +234,14 @@ For direct SQL, the bridge can infer the right SQL tool:
 ```
 
 Set `MYSQL_MCP_CURSOR_REQUEST_FILE` to override the request file path.
+
+---
+
+### AI Agent Tool Discovery
+
+For Codex, Claude Code CLI, Cursor, Droid CLI, and other MCP agents, call `list_all_tools` first. It returns the live runtime catalog, enabled/disabled status, active permission/category profile, and recommended workflows for schema exploration, safe SELECT queries, CSV exports, transactions, and data changes.
+
+Use `export_table_to_csv` for table-based exports and `export_query_to_csv` for SELECT query exports.
 
 ---
 

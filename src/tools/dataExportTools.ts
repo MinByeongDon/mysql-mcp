@@ -70,6 +70,41 @@ export class DataExportTools {
     return `'${escaped}'`;
   }
 
+  private escapeCsvValue(value: any): string {
+    if (value === null || value === undefined) return "";
+
+    const normalizedValue = value instanceof Date
+      ? value.toISOString()
+      : Buffer.isBuffer(value)
+        ? value.toString("base64")
+        : String(value);
+
+    if (/[",\r\n]/.test(normalizedValue)) {
+      return `"${normalizedValue.replace(/"/g, '""')}"`;
+    }
+
+    return normalizedValue;
+  }
+
+  private rowsToCSV(rows: any[], includeHeaders: boolean): string {
+    if (rows.length === 0) {
+      return "";
+    }
+
+    const columns = Object.keys(rows[0]);
+    const csvRows: string[] = [];
+
+    if (includeHeaders) {
+      csvRows.push(columns.map((column) => this.escapeCsvValue(column)).join(","));
+    }
+
+    for (const row of rows) {
+      csvRows.push(columns.map((column) => this.escapeCsvValue(row[column])).join(","));
+    }
+
+    return `${csvRows.join("\n")}\n`;
+  }
+
   /**
    * Export table data to CSV format
    */
@@ -219,42 +254,77 @@ export class DataExportTools {
         };
       }
 
-      // Generate CSV
-      let csv = "";
-
-      // Add headers if requested
-      if (include_headers) {
-        const headers = Object.keys(results[0]).join(",");
-        csv += headers + "\n";
-      }
-
-      // Add data rows
-      for (const row of results) {
-        const values = Object.values(row)
-          .map((value) => {
-            if (value === null) return "";
-            if (typeof value === "string") {
-              // Escape quotes and wrap in quotes if contains comma or newline
-              if (
-                value.includes(",") ||
-                value.includes("\n") ||
-                value.includes('"')
-              ) {
-                return `"${value.replace(/"/g, '""')}"`;
-              }
-              return value;
-            }
-            return String(value);
-          })
-          .join(",");
-        csv += values + "\n";
-      }
+      const csv = this.rowsToCSV(results, include_headers);
 
       return {
         status: "success",
         data: {
           csv: csv,
           row_count: results.length,
+        },
+      };
+    } catch (error: any) {
+      return {
+        status: "error",
+        error: error.message,
+      };
+    }
+  }
+
+  async exportQueryToCSV(queryParams: {
+    query: string;
+    params?: any[];
+    include_headers?: boolean;
+  }): Promise<{
+    status: string;
+    data?: any;
+    error?: string;
+  }> {
+    try {
+      const {
+        query,
+        params = [],
+        include_headers = true,
+      } = queryParams;
+
+      const queryValidation = this.security.validateQuery(
+        query,
+        this.security.hasExecutePermission(),
+      );
+      if (!queryValidation.valid) {
+        return {
+          status: "error",
+          error: `Query validation failed: ${queryValidation.error}`,
+        };
+      }
+
+      if (queryValidation.queryType !== "SELECT") {
+        return {
+          status: "error",
+          error: "export_query_to_csv only accepts SELECT queries.",
+        };
+      }
+
+      const paramValidation = this.security.validateParameters(params);
+      if (!paramValidation.valid) {
+        return {
+          status: "error",
+          error: `Parameter validation failed: ${paramValidation.error}`,
+        };
+      }
+
+      const results = await this.db.query<any[]>(
+        query,
+        paramValidation.sanitizedParams!,
+        false,
+      );
+      const maskedResults = this.security.masking.processResults(results);
+
+      return {
+        status: "success",
+        data: {
+          csv: this.rowsToCSV(maskedResults, include_headers),
+          row_count: maskedResults.length,
         },
       };
     } catch (error: any) {
