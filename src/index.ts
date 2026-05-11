@@ -16,6 +16,7 @@ import { AiTools } from "./tools/aiTools";
 import { MacroTools } from "./tools/macroTools";
 import { SmartQueryBuilderTools } from "./tools/smartQueryBuilderTools";
 import { FulltextSearchTools } from "./tools/fulltextSearchTools";
+import { RelationalSeederTools } from "./tools/relationalSeederTools";
 import SecurityLayer from "./security/securityLayer";
 import DatabaseConnection from "./db/connection";
 import { FeatureConfig } from "./config/featureConfig";
@@ -43,6 +44,7 @@ export class MySQLMCP {
   private macroTools: MacroTools;
   private smartQueryBuilderTools: SmartQueryBuilderTools;
   private fulltextSearchTools: FulltextSearchTools;
+  private relationalSeederTools: RelationalSeederTools;
   private security: SecurityLayer;
   private featureConfig: FeatureConfig;
 
@@ -67,6 +69,7 @@ export class MySQLMCP {
     this.macroTools = new MacroTools(this.security);
     this.smartQueryBuilderTools = new SmartQueryBuilderTools(this.security);
     this.fulltextSearchTools = new FulltextSearchTools(this.security);
+    this.relationalSeederTools = new RelationalSeederTools(this.security);
   }
 
   // Helper method to check if tool is enabled
@@ -582,6 +585,39 @@ export class MySQLMCP {
       return { status: "error", error: check.error };
     }
     return this.crudTools.bulkDelete(params);
+  }
+
+  // Relational Data Seeder Tools
+  async planSeedData(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("planSeedData");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.planSeedData(params);
+  }
+
+  async generateSeedPreview(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("generateSeedPreview");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.generateSeedPreview(params);
+  }
+
+  async executeSeedPlan(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("executeSeedPlan");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.executeSeedPlan(params);
+  }
+
+  async validateSeedIntegrity(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("validateSeedIntegrity");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.validateSeedIntegrity(params);
   }
 
   // Close database connection

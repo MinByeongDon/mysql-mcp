@@ -5,6 +5,15 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.41.0] - 2026-05-11
+
+### Added
+- Added `seed_operations` category with `plan_seed_data`, `generate_seed_preview`, `execute_seed_plan`, and `validate_seed_integrity` for FK-aware relational dummy data seeding.
+- Added deterministic seed planning, preview, confirmation token, transaction rollback, production-name guard, and integrity validation support.
+
+### Changed
+- Updated tool totals and version metadata to `1.41.0`.
+
 ## [1.40.7] - 2026-05-06
 
 ### Added

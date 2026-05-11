@@ -1,8 +1,8 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-05-06 22:38:42
-**Version:** 1.40.7
-**Total Tools:** 79
+**Last Updated:** 2026-05-11 10:15:32
+**Version:** 1.41.0
+**Total Tools:** 83
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
 
@@ -109,7 +109,7 @@ For CSV exports, use `export_table_to_csv` for table-based exports and `export_q
 |------------|------------|---------------|
 | `list` | List/discover objects | `list_databases`, `list_tables` |
 | `read` | Read data | `read_records`, `run_select_query` |
-| `create` | Insert records | `create_record`, `bulk_insert` |
+| `create` | Insert records and seed data | `create_record`, `bulk_insert`, `execute_seed_plan` |
 | `update` | Update records | `update_record`, `bulk_update` |
 | `delete` | Delete records | `delete_record`, `bulk_delete` |
 | `execute` | Custom SQL | `execute_write_query` |
@@ -149,22 +149,28 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `bulk_update` - Batch update (performance)
 - `bulk_delete` - Batch delete (performance)
 
-### 4. Query Management (3 tools)
+### 4. Seed Operations (4 tools)
+- `plan_seed_data` - Build FK-aware relational seed plans
+- `generate_seed_preview` - Preview deterministic dummy rows without writing
+- `execute_seed_plan` - Execute confirmed seed plans with transaction and rollback safety
+- `validate_seed_integrity` - Validate row counts, FK orphans, required columns, and unique collisions
+
+### 5. Query Management (3 tools)
 - `run_select_query` - Execute SELECT queries
 - `execute_write_query` - Execute INSERT/UPDATE/DELETE
 - `repair_query` - Diagnose and fix SQL errors
 
-### 5. Schema Management (4 tools)
+### 6. Schema Management (4 tools)
 - `create_table` - Create new tables
 - `alter_table` - Modify table structure
 - `drop_table` - Delete tables
 - `execute_ddl` - Execute raw DDL
 
-### 6. Data Export (2 tools)
+### 7. Data Export (2 tools)
 - `export_table_to_csv` - Export table data to CSV
 - `export_query_to_csv` - Export SELECT query results to CSV
 
-### 7. Index Management (10 tools)
+### 8. Index Management (10 tools)
 - `list_indexes` - List table indexes
 - `get_index_info` - Get index details
 - `create_index` - Create indexes
@@ -176,7 +182,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `get_fulltext_stats` - Get FULLTEXT index statistics
 - `optimize_fulltext` - Optimize FULLTEXT indexes
 
-### 8. Constraint Management (7 tools)
+### 9. Constraint Management (7 tools)
 - `list_foreign_keys` - List foreign keys
 - `list_constraints` - List all constraints
 - `add_foreign_key` - Add foreign key
@@ -185,7 +191,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_constraint` - Remove constraint
 - `add_check_constraint` - Add check constraint
 
-### 9. Stored Procedures (6 tools)
+### 10. Stored Procedures (6 tools)
 - `list_stored_procedures` - List procedures
 - `get_stored_procedure_info` - Get procedure details
 - `execute_stored_procedure` - Execute procedures
@@ -193,7 +199,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_stored_procedure` - Remove procedures
 - `show_create_procedure` - Show CREATE statement
 
-### 10. Views Management (6 tools)
+### 11. Views Management (6 tools)
 - `list_views` - List views
 - `get_view_info` - Get view details
 - `create_view` - Create views
@@ -201,14 +207,14 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_view` - Remove views
 - `show_create_view` - Show CREATE statement
 
-### 11. Triggers Management (5 tools)
+### 12. Triggers Management (5 tools)
 - `list_triggers` - List triggers
 - `get_trigger_info` - Get trigger details
 - `create_trigger` - Create triggers
 - `drop_trigger` - Remove triggers
 - `show_create_trigger` - Show CREATE statement
 
-### 12. Table Maintenance (8 tools)
+### 13. Table Maintenance (8 tools)
 - `analyze_table` - Update statistics
 - `optimize_table` - Reclaim space
 - `check_table` - Check for errors
@@ -218,19 +224,19 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `flush_table` - Close/reopen table
 - `get_table_size` - Get size information
 
-### 13. Transaction Management (5 tools)
+### 14. Transaction Management (5 tools)
 - `begin_transaction` - Start transaction
 - `commit_transaction` - Commit transaction
 - `rollback_transaction` - Rollback transaction
 - `get_transaction_status` - Check transaction state
 - `execute_in_transaction` - Execute within transaction
 
-### 14. Query Optimization (3 tools)
+### 15. Query Optimization (3 tools)
 - `analyze_query` - Analyze query performance
 - `get_optimization_hints` - Get optimizer hints
 - `repair_query` - Repair broken SQL queries
 
-### 15. Utilities (5 tools)
+### 16. Utilities (5 tools)
 - `test_connection` - Test connectivity
 - `describe_connection` - Connection info
 - `read_changelog` - Read changelog
@@ -328,6 +334,37 @@ For high-performance operations with large datasets:
 - **Bulk Insert**: Handle thousands of records efficiently
 - **Bulk Update**: Update multiple records with different conditions
 - **Bulk Delete**: Delete multiple record sets in batches
+
+### Relational Data Seeder
+
+For dummy data on related tables, use the seed workflow:
+
+```javascript
+const plan = await mcp.call("plan_seed_data", {
+  target_tables: ["orders"],
+  rows_per_table: 20,
+  include_dependencies: true,
+  include_children: true,
+  random_seed: 42
+});
+
+await mcp.call("generate_seed_preview", {
+  plan_id: plan.plan_id,
+  max_preview_rows_per_table: 3
+});
+
+await mcp.call("execute_seed_plan", {
+  plan_id: plan.plan_id,
+  dry_run: false,
+  confirm_token: plan.confirm_token
+});
+
+await mcp.call("validate_seed_integrity", {
+  plan_id: plan.plan_id
+});
+```
+
+`execute_seed_plan` defaults to dry-run, requires confirmation for writes, blocks production-like database names unless explicitly allowed, and uses transaction rollback on errors.
 
 ### Transaction Management
 

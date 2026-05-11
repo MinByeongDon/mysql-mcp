@@ -20,7 +20,7 @@ export enum ToolCategory {
 }
 
 /**
- * Documentation categories from README (13 categories)
+ * Documentation categories from README
  * More intuitive and matches user mental model
  */
 export enum DocCategory {
@@ -39,6 +39,7 @@ export enum DocCategory {
   TABLE_MAINTENANCE = "table_maintenance",
   QUERY_OPTIMIZATION = "query_optimization",
   ANALYSIS = "analysis",
+  SEED_OPERATIONS = "seed_operations",
 }
 
 /**
@@ -70,6 +71,16 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   bulkInsert: ToolCategory.CREATE,
   bulkUpdate: ToolCategory.UPDATE,
   bulkDelete: ToolCategory.DELETE,
+
+  // Seed operations
+  planSeedData: ToolCategory.LIST,
+  plan_seed_data: ToolCategory.LIST,
+  generateSeedPreview: ToolCategory.READ,
+  generate_seed_preview: ToolCategory.READ,
+  executeSeedPlan: ToolCategory.CREATE,
+  execute_seed_plan: ToolCategory.CREATE,
+  validateSeedIntegrity: ToolCategory.READ,
+  validate_seed_integrity: ToolCategory.READ,
 
   // Query tools
   runSelectQuery: ToolCategory.READ,
@@ -188,6 +199,16 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   bulkInsert: DocCategory.BULK_OPERATIONS,
   bulkUpdate: DocCategory.BULK_OPERATIONS,
   bulkDelete: DocCategory.BULK_OPERATIONS,
+
+  // Seed Operations
+  planSeedData: DocCategory.SEED_OPERATIONS,
+  plan_seed_data: DocCategory.SEED_OPERATIONS,
+  generateSeedPreview: DocCategory.SEED_OPERATIONS,
+  generate_seed_preview: DocCategory.SEED_OPERATIONS,
+  executeSeedPlan: DocCategory.SEED_OPERATIONS,
+  execute_seed_plan: DocCategory.SEED_OPERATIONS,
+  validateSeedIntegrity: DocCategory.SEED_OPERATIONS,
+  validate_seed_integrity: DocCategory.SEED_OPERATIONS,
 
   // Custom Queries
   runSelectQuery: DocCategory.CUSTOM_QUERIES,
@@ -310,11 +331,13 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.TABLE_MAINTENANCE,
     DocCategory.ANALYSIS,
     DocCategory.UTILITIES,
+    DocCategory.SEED_OPERATIONS,
   ],
-  read: [DocCategory.CRUD_OPERATIONS, DocCategory.CUSTOM_QUERIES, DocCategory.ANALYSIS],
+  read: [DocCategory.CRUD_OPERATIONS, DocCategory.CUSTOM_QUERIES, DocCategory.ANALYSIS, DocCategory.SEED_OPERATIONS],
   create: [
     DocCategory.CRUD_OPERATIONS,
     DocCategory.BULK_OPERATIONS,
+    DocCategory.SEED_OPERATIONS,
   ],
   update: [
     DocCategory.CRUD_OPERATIONS,
@@ -338,7 +361,7 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.TABLE_MAINTENANCE,
     DocCategory.QUERY_OPTIMIZATION,
   ],
-  transaction: [DocCategory.TRANSACTION_MANAGEMENT],
+  transaction: [DocCategory.TRANSACTION_MANAGEMENT, DocCategory.SEED_OPERATIONS],
   procedure: [DocCategory.STORED_PROCEDURES],
 };
 

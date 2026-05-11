@@ -1,7 +1,7 @@
 {
   "name": "mysql-mcp",
   "description": "A Model Context Protocol for MySQL database interaction",
-  "version": "1.40.7",
+  "version": "1.41.0",
   "tools": [
     {
       "name": "list_databases",
@@ -526,6 +526,235 @@
         "required": [
           "table_name",
           "condition_sets"
+        ]
+      },
+      "output_schema": {
+        "type": "object"
+      }
+    },
+    {
+      "name": "plan_seed_data",
+      "description": "🌱 RELATIONAL SEEDER: Analyzes target tables, foreign keys, constraints, and row counts to build a safe parent-first seed plan. Use this before generating preview or inserting dummy relational data.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "database": {
+            "type": "string",
+            "description": "Optional: specific connected database name"
+          },
+          "target_tables": {
+            "type": "array",
+            "description": "Target tables to seed",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "rows_per_table": {
+            "oneOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            ],
+            "description": "Rows to create for target tables, either a single number or table-to-count map (default: 10)"
+          },
+          "include_dependencies": {
+            "type": "boolean",
+            "description": "Include parent tables required by foreign keys (default: true)"
+          },
+          "include_children": {
+            "type": "boolean",
+            "description": "Include child tables that reference included tables for nested relational seeding (default: false)"
+          },
+          "child_rows_per_parent": {
+            "type": "number",
+            "description": "Rows to create in child tables for each parent row (default: 2)",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "respect_existing_data": {
+            "type": "boolean",
+            "description": "Reuse existing parent records when possible instead of creating new parent rows (default: true)"
+          },
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "append"
+            ],
+            "description": "Seed strategy (currently append)"
+          },
+          "random_seed": {
+            "type": "number",
+            "description": "Deterministic seed for repeatable preview and execution (default: 42)"
+          },
+          "max_rows_per_table": {
+            "type": "number",
+            "description": "Safety cap for generated rows per table (default: 1000)",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "max_related_tables": {
+            "type": "number",
+            "description": "Safety cap for dependency/child expansion (default: 25)",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "seed_rules": {
+            "type": "object",
+            "description": "Optional generator overrides keyed by table.column or column name",
+            "additionalProperties": true
+          },
+          "require_confirmation": {
+            "type": "boolean",
+            "description": "Require confirm_token for non-dry-run execution (default: true)"
+          }
+        },
+        "required": [
+          "target_tables"
+        ]
+      },
+      "output_schema": {
+        "type": "object"
+      }
+    },
+    {
+      "name": "generate_seed_preview",
+      "description": "🌱 RELATIONAL SEEDER: Generates deterministic dummy row previews from a seed plan without writing to the database. Shows symbolic foreign-key placeholders for review before execution.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plan_id": {
+            "type": "string",
+            "description": "Seed plan ID returned by plan_seed_data"
+          },
+          "locale": {
+            "type": "string",
+            "description": "Optional locale hint for generated values (default: en_US)"
+          },
+          "realistic": {
+            "type": "boolean",
+            "description": "Whether to prefer realistic generated values (default: true)"
+          },
+          "max_preview_rows_per_table": {
+            "type": "number",
+            "description": "Maximum preview rows per table (default: 3)",
+            "minimum": 1,
+            "maximum": 25
+          },
+          "email_domain": {
+            "type": "string",
+            "description": "Safe email domain for generated emails (default: example.test)"
+          }
+        },
+        "required": [
+          "plan_id"
+        ]
+      },
+      "output_schema": {
+        "type": "object"
+      }
+    },
+    {
+      "name": "execute_seed_plan",
+      "description": "🌱 RELATIONAL SEEDER: Executes a confirmed seed plan with dry-run enabled by default, production-name guard, transaction rollback on errors, and foreign-key ID resolution.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plan_id": {
+            "type": "string",
+            "description": "Seed plan ID returned by plan_seed_data"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "description": "If true, returns execution preview without inserting rows (default: true)"
+          },
+          "use_transaction": {
+            "type": "boolean",
+            "description": "Use a transaction and rollback on error (default: true)"
+          },
+          "batch_size": {
+            "type": "number",
+            "description": "Reserved batch-size hint for large plans (default: 1 for ID-safe inserts)",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "on_error": {
+            "type": "string",
+            "enum": [
+              "rollback",
+              "stop"
+            ],
+            "description": "Error behavior (default: rollback)"
+          },
+          "confirm_token": {
+            "type": "string",
+            "description": "Confirmation token returned by plan_seed_data; required when dry_run is false"
+          },
+          "allow_production": {
+            "type": "boolean",
+            "description": "Allow writes to production-like database names (default: false)"
+          },
+          "email_domain": {
+            "type": "string",
+            "description": "Safe email domain for generated emails (default: example.test)"
+          }
+        },
+        "required": [
+          "plan_id"
+        ]
+      },
+      "output_schema": {
+        "type": "object"
+      }
+    },
+    {
+      "name": "validate_seed_integrity",
+      "description": "🌱 RELATIONAL SEEDER: Validates seed results with FK orphan checks, required-column checks, unique-collision checks, and inserted row-count checks.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plan_id": {
+            "type": "string",
+            "description": "Seed plan ID returned by plan_seed_data"
+          },
+          "tables": {
+            "type": "array",
+            "description": "Optional table subset to validate",
+            "items": {
+              "type": "string"
+            }
+          },
+          "check_foreign_keys": {
+            "type": "boolean",
+            "description": "Check foreign key integrity (default: true)"
+          },
+          "check_orphans": {
+            "type": "boolean",
+            "description": "Alias for check_foreign_keys"
+          },
+          "check_required_columns": {
+            "type": "boolean",
+            "description": "Check NOT NULL required columns (default: true)"
+          },
+          "check_unique_collisions": {
+            "type": "boolean",
+            "description": "Check unique index collisions (default: true)"
+          },
+          "check_row_counts": {
+            "type": "boolean",
+            "description": "Check inserted row counts when execution metadata is available (default: true)"
+          }
+        },
+        "required": [
+          "plan_id"
         ]
       },
       "output_schema": {
