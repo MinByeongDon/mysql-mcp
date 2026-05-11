@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-05-11 10:15:32
+**Last Updated:** 2026-05-11 10:44:46
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -282,7 +282,7 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
 | `database_discovery` | Explore databases, tables, and schema structure | `get_all_tables_relationships, list_databases, list_tables, read_table_schema` |
 | `crud_operations` | Create, read, update, delete operations on data | `create_record, delete_record, read_records, update_record` |
 | `bulk_operations` | High-performance batch processing operations | `bulk_delete, bulk_insert, bulk_update` |
-| `seed_operations` | FK-aware relational dummy data seeding | `execute_seed_plan, generate_seed_preview, plan_seed_data, validate_seed_integrity` |
+| `seed_operations` | FK-aware relational dummy data seeding | `execute_seed_plan, generate_seed_preview, infer_seed_rules, plan_seed_data, seed_from_template, validate_seed_integrity` |
 | `custom_queries` | Execute custom SQL queries and advanced operations | `execute_write_query, run_select_query` |
 | `schema_management` | Manage database schema, tables, and structure | `alter_table, create_table, drop_table, execute_ddl` |
 | `utilities` | Database utilities, diagnostics, and helper functions | `cursor_execute_request, describe_connection, export_query_to_csv, export_table_to_csv, list_all_tools, read_changelog, test_connection` |
@@ -311,7 +311,7 @@ Full category → tool mapping (and examples) lives in **[DOCUMENTATIONS.md → 
 
 ## Available Tools
 
-The server exposes **83 tools** organized into categories (CRUD, seed, schema, and utilities).
+The server exposes **85 tools** organized into categories (CRUD, seed, schema, and utilities).
 
 - Complete list of tools: **[DOCUMENTATIONS.md → Complete Tools Reference](DOCUMENTATIONS.md#🔧-complete-tools-reference)**
 
@@ -323,7 +323,7 @@ For comprehensive documentation, see **[DOCUMENTATIONS.md](DOCUMENTATIONS.md)**:
 
 - **DDL Operations** - Create, alter, and drop tables
 - **Data Export Tools** - Export to CSV, JSON, and SQL formats
-- **Relational Data Seeder** - Plan, preview, execute, and validate FK-aware dummy data
+- **Relational Data Seeder** - Plan, preview, execute, validate, infer rules, and template FK-aware dummy data
 - **Data Import Tools** - Import from CSV and JSON sources
 - **Data Migration Tools** - Copy, move, clone, compare, and sync data
 - **Schema Versioning** - Version control for database schema changes

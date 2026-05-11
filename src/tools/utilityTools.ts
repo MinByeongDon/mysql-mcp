@@ -427,6 +427,7 @@ export class UtilityTools {
                 "commit_transaction or rollback_transaction",
               ],
               seed_relational_data: [
+                "infer_seed_rules or seed_from_template when domain/sample-based rules are useful",
                 "plan_seed_data",
                 "generate_seed_preview",
                 "execute_seed_plan with dry_run=false and confirm_token after user approval",

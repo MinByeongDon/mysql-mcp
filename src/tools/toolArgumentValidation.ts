@@ -28,23 +28,91 @@ const validatePlanSeedDataArgs = (args: any): { valid: boolean; errors?: string[
     if (!validation.valid) errors.push(validation.error || "Invalid database name");
   }
 
-  if (args.rows_per_table !== undefined) {
-    if (typeof args.rows_per_table === "number") {
-      if (!Number.isFinite(args.rows_per_table) || args.rows_per_table < 0) {
-        errors.push("rows_per_table must be a non-negative number");
-      }
-    } else if (typeof args.rows_per_table === "object" && args.rows_per_table !== null && !Array.isArray(args.rows_per_table)) {
-      for (const [table, count] of Object.entries(args.rows_per_table)) {
-        const tableValidation = validateTableName(table);
-        if (!tableValidation.valid) errors.push(`Invalid rows_per_table key '${table}': ${tableValidation.error}`);
-        if (typeof count !== "number" || !Number.isFinite(count) || count < 0) {
-          errors.push(`rows_per_table.${table} must be a non-negative number`);
-        }
-      }
-    } else {
-      errors.push("rows_per_table must be a number or object map");
+  validateRowsPerTable(args.rows_per_table, errors);
+
+  return errors.length ? { valid: false, errors } : { valid: true };
+};
+
+const validateRowsPerTable = (rowsPerTable: any, errors: string[]): void => {
+  if (rowsPerTable === undefined) return;
+
+  if (typeof rowsPerTable === "number") {
+    if (!Number.isFinite(rowsPerTable) || rowsPerTable < 0) {
+      errors.push("rows_per_table must be a non-negative number");
     }
+    return;
   }
+
+  if (typeof rowsPerTable === "object" && rowsPerTable !== null && !Array.isArray(rowsPerTable)) {
+    for (const [table, count] of Object.entries(rowsPerTable)) {
+      const tableValidation = validateTableName(table);
+      if (!tableValidation.valid) errors.push(`Invalid rows_per_table key '${table}': ${tableValidation.error}`);
+      if (typeof count !== "number" || !Number.isFinite(count) || count < 0) {
+        errors.push(`rows_per_table.${table} must be a non-negative number`);
+      }
+    }
+    return;
+  }
+
+  errors.push("rows_per_table must be a number or object map");
+};
+
+const validateTableList = (value: any, key: string, errors: string[]): void => {
+  if (value === undefined) return;
+  if (!Array.isArray(value)) {
+    errors.push(`${key} must be an array`);
+    return;
+  }
+  for (const table of value) {
+    const validation = validateTableName(table);
+    if (!validation.valid) errors.push(`Invalid ${key} table '${table}': ${validation.error}`);
+  }
+};
+
+const validateInferSeedRulesArgs = (args: any): { valid: boolean; errors?: string[] } => {
+  const errors: string[] = [];
+
+  if (args.database !== undefined) {
+    const validation = validateValue(args.database);
+    if (!validation.valid) errors.push(validation.error || "Invalid database name");
+  }
+
+  validateTableList(args.tables, "tables", errors);
+
+  if (args.domain !== undefined && !["auto", "generic", "ecommerce", "pos", "crm"].includes(args.domain)) {
+    errors.push("domain must be one of auto, generic, ecommerce, pos, crm");
+  }
+
+  if (args.sample_size !== undefined && (!Number.isFinite(Number(args.sample_size)) || Number(args.sample_size) < 0)) {
+    errors.push("sample_size must be a non-negative number");
+  }
+
+  if (args.max_tables !== undefined && (!Number.isFinite(Number(args.max_tables)) || Number(args.max_tables) < 1)) {
+    errors.push("max_tables must be a positive number");
+  }
+
+  return errors.length ? { valid: false, errors } : { valid: true };
+};
+
+const validateSeedFromTemplateArgs = (args: any): { valid: boolean; errors?: string[] } => {
+  const errors: string[] = [];
+
+  if (!args.template || !["ecommerce", "pos", "crm"].includes(args.template)) {
+    errors.push("template must be one of ecommerce, pos, crm");
+  }
+
+  if (args.database !== undefined) {
+    const validation = validateValue(args.database);
+    if (!validation.valid) errors.push(validation.error || "Invalid database name");
+  }
+
+  if (args.scale !== undefined && !["small", "medium", "large"].includes(args.scale)) {
+    errors.push("scale must be one of small, medium, large");
+  }
+
+  validateTableList(args.include, "include", errors);
+  validateTableList(args.exclude, "exclude", errors);
+  validateRowsPerTable(args.rows_per_table, errors);
 
   return errors.length ? { valid: false, errors } : { valid: true };
 };
@@ -94,6 +162,10 @@ export function validateToolArguments(
       case "execute_seed_plan":
       case "validate_seed_integrity":
         return validatePlanIdArgs(args);
+      case "infer_seed_rules":
+        return validateInferSeedRulesArgs(args);
+      case "seed_from_template":
+        return validateSeedFromTemplateArgs(args);
       case "list_tables":
       case "get_schema_erd":
       case "get_schema_rag_context":

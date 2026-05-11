@@ -620,6 +620,22 @@ export class MySQLMCP {
     return await this.relationalSeederTools.validateSeedIntegrity(params);
   }
 
+  async inferSeedRules(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("inferSeedRules");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.inferSeedRules(params);
+  }
+
+  async seedFromTemplate(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("seedFromTemplate");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.seedFromTemplate(params);
+  }
+
   // Close database connection
   async close() {
     const db = DatabaseConnection.getInstance();

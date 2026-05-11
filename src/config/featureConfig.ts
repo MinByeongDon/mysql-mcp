@@ -81,6 +81,10 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   execute_seed_plan: ToolCategory.CREATE,
   validateSeedIntegrity: ToolCategory.READ,
   validate_seed_integrity: ToolCategory.READ,
+  inferSeedRules: ToolCategory.READ,
+  infer_seed_rules: ToolCategory.READ,
+  seedFromTemplate: ToolCategory.LIST,
+  seed_from_template: ToolCategory.LIST,
 
   // Query tools
   runSelectQuery: ToolCategory.READ,
@@ -209,6 +213,10 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   execute_seed_plan: DocCategory.SEED_OPERATIONS,
   validateSeedIntegrity: DocCategory.SEED_OPERATIONS,
   validate_seed_integrity: DocCategory.SEED_OPERATIONS,
+  inferSeedRules: DocCategory.SEED_OPERATIONS,
+  infer_seed_rules: DocCategory.SEED_OPERATIONS,
+  seedFromTemplate: DocCategory.SEED_OPERATIONS,
+  seed_from_template: DocCategory.SEED_OPERATIONS,
 
   // Custom Queries
   runSelectQuery: DocCategory.CUSTOM_QUERIES,

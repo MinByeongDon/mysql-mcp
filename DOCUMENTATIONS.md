@@ -1,8 +1,8 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-05-11 10:15:32
-**Version:** 1.41.0
-**Total Tools:** 83
+**Last Updated:** 2026-05-11 10:44:46
+**Version:** 1.42.0
+**Total Tools:** 85
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
 
@@ -149,11 +149,13 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `bulk_update` - Batch update (performance)
 - `bulk_delete` - Batch delete (performance)
 
-### 4. Seed Operations (4 tools)
+### 4. Seed Operations (6 tools)
 - `plan_seed_data` - Build FK-aware relational seed plans
 - `generate_seed_preview` - Preview deterministic dummy rows without writing
 - `execute_seed_plan` - Execute confirmed seed plans with transaction and rollback safety
 - `validate_seed_integrity` - Validate row counts, FK orphans, required columns, and unique collisions
+- `infer_seed_rules` - Infer advanced generators from schema, samples, unique indexes, and domain presets
+- `seed_from_template` - Create reusable plan-first seed workflows for ecommerce, POS, and CRM domains
 
 ### 5. Query Management (3 tools)
 - `run_select_query` - Execute SELECT queries
@@ -365,6 +367,26 @@ await mcp.call("validate_seed_integrity", {
 ```
 
 `execute_seed_plan` defaults to dry-run, requires confirmation for writes, blocks production-like database names unless explicitly allowed, and uses transaction rollback on errors.
+
+Composite FK/PK support resolves multi-column parent tuples together, so relations such as `(tenant_id, region_id)` or `(tenant_id, region_id, order_id)` are not mixed across different parent rows.
+
+Advanced rule inference and templates:
+
+```javascript
+await mcp.call("infer_seed_rules", {
+  tables: ["orders", "order_items"],
+  domain: "ecommerce",
+  sample_size: 25
+});
+
+await mcp.call("seed_from_template", {
+  template: "ecommerce",
+  scale: "small",
+  random_seed: 42
+});
+```
+
+`seed_from_template` is plan-first and does not write data directly. Review its plan/preview, then execute with `execute_seed_plan`.
 
 ### Transaction Management
 

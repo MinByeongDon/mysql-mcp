@@ -5,6 +5,16 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.42.0] - 2026-05-11
+
+### Added
+- Added composite FK/PK tuple resolution for relational seeding so multi-column relationships are selected and validated as intact parent key tuples.
+- Added `infer_seed_rules` to infer safe seed generators from schema, samples, unique indexes, and ecommerce/POS/CRM domain presets.
+- Added `seed_from_template` to create plan-first ecommerce, POS, and CRM seed workflows with detected tables and template-scale row counts.
+
+### Changed
+- Updated seed tool count to 6 and total MCP tools to 85.
+
 ## [1.41.0] - 2026-05-11
 
 ### Added

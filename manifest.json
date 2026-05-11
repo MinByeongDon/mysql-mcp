@@ -1,7 +1,7 @@
 {
   "name": "mysql-mcp",
   "description": "A Model Context Protocol for MySQL database interaction",
-  "version": "1.41.0",
+  "version": "1.42.0",
   "tools": [
     {
       "name": "list_databases",
@@ -755,6 +755,139 @@
         },
         "required": [
           "plan_id"
+        ]
+      },
+      "output_schema": {
+        "type": "object"
+      }
+    },
+    {
+      "name": "infer_seed_rules",
+      "description": "🌱 ADVANCED SEEDER: Infers safe seed generator rules from schema metadata, sample row patterns, unique constraints, and optional ecommerce/POS/CRM domain presets without returning raw PII samples.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "database": {
+            "type": "string",
+            "description": "Optional: specific connected database name"
+          },
+          "tables": {
+            "type": "array",
+            "description": "Optional table subset to analyze; defaults to schema tables up to max_tables",
+            "items": {
+              "type": "string"
+            }
+          },
+          "domain": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "generic",
+              "ecommerce",
+              "pos",
+              "crm"
+            ],
+            "description": "Optional domain preset for better business-like dummy data (default: auto)"
+          },
+          "sample_size": {
+            "type": "number",
+            "description": "Number of sample rows per table used to infer ranges and enum-like choices (default: 25, max: 100)",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "max_tables": {
+            "type": "number",
+            "description": "Maximum number of tables to analyze when tables is omitted (default: 50)",
+            "minimum": 1,
+            "maximum": 200
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object"
+      }
+    },
+    {
+      "name": "seed_from_template",
+      "description": "🌱 TEMPLATE SEEDER: Creates a plan-first FK-aware seed workflow from ecommerce, POS, or CRM templates. It detects matching tables, applies domain rules, and returns a seed plan for preview/execution.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "database": {
+            "type": "string",
+            "description": "Optional: specific connected database name"
+          },
+          "template": {
+            "type": "string",
+            "enum": [
+              "ecommerce",
+              "pos",
+              "crm"
+            ],
+            "description": "Business seed template to apply"
+          },
+          "scale": {
+            "type": "string",
+            "enum": [
+              "small",
+              "medium",
+              "large"
+            ],
+            "description": "Template size preset (default: small)"
+          },
+          "include": {
+            "type": "array",
+            "description": "Optional concrete table list to seed instead of auto-detected template matches",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exclude": {
+            "type": "array",
+            "description": "Optional table names to ignore during template matching",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rows_per_table": {
+            "oneOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            ],
+            "description": "Optional row-count override for the generated plan"
+          },
+          "include_dependencies": {
+            "type": "boolean",
+            "description": "Include parent tables required by foreign keys (default: true)"
+          },
+          "include_children": {
+            "type": "boolean",
+            "description": "Include child tables that reference included template tables (default: false)"
+          },
+          "respect_existing_data": {
+            "type": "boolean",
+            "description": "Reuse existing parent records when possible instead of creating new parent rows (default: true)"
+          },
+          "random_seed": {
+            "type": "number",
+            "description": "Deterministic seed for repeatable preview and execution"
+          },
+          "require_confirmation": {
+            "type": "boolean",
+            "description": "Require confirm_token for non-dry-run execution (default: true)"
+          }
+        },
+        "required": [
+          "template"
         ]
       },
       "output_schema": {

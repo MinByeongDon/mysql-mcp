@@ -3,6 +3,11 @@ import { dbConfig } from "../config/config";
 import SecurityLayer from "../security/securityLayer";
 
 type RowsPerTable = number | Record<string, number>;
+type SeedDomain = "auto" | "generic" | "ecommerce" | "pos" | "crm";
+type SeedTemplate = "ecommerce" | "pos" | "crm";
+type TemplateScale = "small" | "medium" | "large";
+type KeyTuple = Record<string, any>;
+type KeyTupleMap = Record<string, Record<string, KeyTuple[]>>;
 
 interface SeedRule {
   generator?: string;
@@ -10,10 +15,13 @@ interface SeedRule {
   value?: any;
   min?: number;
   max?: number;
+  start?: string;
+  end?: string;
   prefix?: string;
   pattern?: string;
   domain?: string;
   nullable?: boolean;
+  source?: string;
 }
 
 interface ColumnMeta {
@@ -32,8 +40,10 @@ interface ColumnMeta {
 interface ForeignKeyMeta {
   childTable: string;
   childColumn: string;
+  childColumns: string[];
   parentTable: string;
   parentColumn: string;
+  parentColumns: string[];
   constraintName: string;
 }
 
@@ -151,6 +161,29 @@ interface RowGenerationContext {
   preview: boolean;
   emailDomain: string;
   idMap: Record<string, Record<string, any[]>>;
+  tupleMap: KeyTupleMap;
+}
+
+interface InferSeedRulesParams {
+  database?: string;
+  tables?: string[];
+  domain?: SeedDomain;
+  sample_size?: number;
+  max_tables?: number;
+}
+
+interface SeedFromTemplateParams {
+  database?: string;
+  template: SeedTemplate;
+  scale?: TemplateScale;
+  include?: string[];
+  exclude?: string[];
+  rows_per_table?: RowsPerTable;
+  include_dependencies?: boolean;
+  include_children?: boolean;
+  respect_existing_data?: boolean;
+  random_seed?: number;
+  require_confirmation?: boolean;
 }
 
 export class RelationalSeederTools {
@@ -215,7 +248,7 @@ export class RelationalSeederTools {
               }
               includedTables.add(fk.parentTable);
               reasons[fk.parentTable] = reasons[fk.parentTable] || [];
-              reasons[fk.parentTable].push(`${fk.childTable}.${fk.childColumn} references ${fk.parentTable}.${fk.parentColumn}`);
+              reasons[fk.parentTable].push(this.formatForeignKey(fk));
               changed = true;
             }
           }
@@ -230,7 +263,7 @@ export class RelationalSeederTools {
               }
               includedTables.add(fk.childTable);
               reasons[fk.childTable] = reasons[fk.childTable] || [];
-              reasons[fk.childTable].push(`${fk.childTable}.${fk.childColumn} references ${fk.parentTable}.${fk.parentColumn}`);
+              reasons[fk.childTable].push(this.formatForeignKey(fk));
               changed = true;
             }
           }
@@ -249,7 +282,7 @@ export class RelationalSeederTools {
         respectExistingData,
       );
 
-      const seedRules = this.inferSeedRules(dependencyOrder, schema, params.seed_rules || {});
+      const seedRules = this.buildInferredSeedRules(dependencyOrder, schema, params.seed_rules || {});
       const constraints = this.detectConstraints(dependencyOrder, schema);
 
       for (const requiredColumn of constraints.required_columns) {
@@ -380,6 +413,7 @@ export class RelationalSeederTools {
 
       const transactionId = `seed_${plan.plan_id}`;
       const idMap: Record<string, Record<string, any[]>> = {};
+      const tupleMap: KeyTupleMap = {};
       const inserted: Record<string, number> = {};
       const insertedPrimaryKeys: Record<string, any[]> = {};
 
@@ -388,7 +422,7 @@ export class RelationalSeederTools {
       }
 
       try {
-        await this.preloadExistingParentIds(stored, idMap, useTransaction ? transactionId : undefined);
+        await this.preloadExistingParentIds(stored, idMap, tupleMap, useTransaction ? transactionId : undefined);
 
         for (const tableName of plan.dependency_order) {
           const requirement = plan.tables_required.find((item) => item.table === tableName);
@@ -397,7 +431,7 @@ export class RelationalSeederTools {
           insertedPrimaryKeys[tableName] = [];
 
           if (rowsToCreate <= 0) {
-            await this.ensureIdMapForTable(stored, tableName, idMap, useTransaction ? transactionId : undefined);
+            await this.ensureIdMapForTable(stored, tableName, idMap, tupleMap, useTransaction ? transactionId : undefined);
             continue;
           }
 
@@ -405,12 +439,13 @@ export class RelationalSeederTools {
             preview: false,
             emailDomain,
             idMap,
+            tupleMap,
           });
 
           for (const row of rows) {
             const result = await this.insertRow(tableName, row, useTransaction ? transactionId : undefined);
             inserted[tableName] += result.affectedRows;
-            this.trackInsertedPrimaryKey(stored.schema.tables[tableName], row, result.insertId, idMap, insertedPrimaryKeys);
+            this.trackInsertedKeys(stored, stored.schema.tables[tableName], row, result.insertId, idMap, tupleMap, insertedPrimaryKeys);
           }
         }
 
@@ -497,8 +532,8 @@ export class RelationalSeederTools {
             violations.push({
               type: "foreign_key_orphan",
               table: fk.childTable,
-              column: fk.childColumn,
-              references: `${fk.parentTable}.${fk.parentColumn}`,
+              columns: fk.childColumns,
+              references: `${fk.parentTable}(${fk.parentColumns.join(",")})`,
               count,
             });
           }
@@ -554,6 +589,110 @@ export class RelationalSeederTools {
           summary,
           row_counts: rowCounts,
           violations,
+        },
+      };
+    } catch (error: any) {
+      return { status: "error", error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  async inferSeedRules(params: InferSeedRulesParams): Promise<{
+    status: string;
+    data?: any;
+    error?: string;
+  }> {
+    try {
+      const database = this.resolveDatabase(params.database);
+      const schema = await this.loadSchema(database);
+      const tables = this.getSelectableTables(schema, params.tables, params.max_tables);
+      const domain = params.domain || "auto";
+      const sampleSize = this.clampNumber(params.sample_size, 0, 100, 25);
+      const resolvedDomain = domain === "auto" ? this.detectDomainFromTables(tables) : domain;
+      const rules = this.buildInferredSeedRules(tables, schema, {}, resolvedDomain);
+      const sampleSummary: Record<string, any> = {};
+      const warnings: string[] = [];
+
+      if (sampleSize > 0) {
+        for (const table of tables) {
+          const samples = await this.loadSampleRows(table, sampleSize);
+          sampleSummary[table] = {
+            rows_analyzed: samples.length,
+            columns_analyzed: schema.tables[table].columns.length,
+          };
+          this.refineRulesFromSamples(table, schema.tables[table], samples, rules, warnings);
+        }
+      }
+
+      return {
+        status: "success",
+        data: {
+          database,
+          domain: resolvedDomain,
+          tables,
+          sample_size: sampleSize,
+          sample_summary: sampleSummary,
+          rules,
+          warnings,
+          privacy_note: "Sample values are used only to infer safe patterns, ranges, and enum-like choices; raw PII samples are not returned.",
+        },
+      };
+    } catch (error: any) {
+      return { status: "error", error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  async seedFromTemplate(params: SeedFromTemplateParams): Promise<{
+    status: string;
+    data?: any;
+    error?: string;
+  }> {
+    try {
+      const database = this.resolveDatabase(params.database);
+      const schema = await this.loadSchema(database);
+      const scale = params.scale || "small";
+      const detected = this.detectTemplateTables(schema, params.template, params.include, params.exclude);
+
+      if (detected.targetTables.length === 0) {
+        return {
+          status: "error",
+          error: `No tables matched template '${params.template}'. Provide include with concrete table names.`,
+        };
+      }
+
+      const templateRows = this.getScaleRows(params.template, scale, detected.targetTables);
+      const rowsPerTable = typeof params.rows_per_table === "object" || typeof params.rows_per_table === "number"
+        ? params.rows_per_table
+        : templateRows;
+      const seedRules = this.buildTemplateRules(params.template, detected.targetTables, schema);
+
+      const planResult = await this.planSeedData({
+        database,
+        target_tables: detected.targetTables,
+        rows_per_table: rowsPerTable,
+        include_dependencies: params.include_dependencies ?? true,
+        include_children: params.include_children ?? false,
+        respect_existing_data: params.respect_existing_data ?? true,
+        random_seed: params.random_seed,
+        seed_rules: seedRules,
+        require_confirmation: params.require_confirmation,
+      });
+
+      if (planResult.status === "error") {
+        return planResult;
+      }
+
+      return {
+        status: "success",
+        data: {
+          template: params.template,
+          scale,
+          database,
+          detected_tables: detected.detectedTables,
+          target_tables: detected.targetTables,
+          ignored_tables: detected.ignoredTables,
+          warnings: detected.warnings,
+          plan: planResult.data,
+          next_recommended_tool: "generate_seed_preview",
         },
       };
     } catch (error: any) {
@@ -682,19 +821,39 @@ export class RelationalSeederTools {
       rowCounts[row.tableName] = Number(row.tableRows || 0);
     }
 
+    const groupedForeignKeys = this.groupForeignKeys(foreignKeys);
+
     return {
       database,
       tables,
-      foreignKeys: foreignKeys.map((fk) => ({
-        childTable: fk.childTable,
-        childColumn: fk.childColumn,
-        parentTable: fk.parentTable,
-        parentColumn: fk.parentColumn,
-        constraintName: fk.constraintName,
-      })),
+      foreignKeys: groupedForeignKeys,
       uniqueIndexes: Object.values(uniqueIndexesByKey),
       rowCounts,
     };
+  }
+
+  private groupForeignKeys(rows: any[]): ForeignKeyMeta[] {
+    const grouped: Record<string, ForeignKeyMeta> = {};
+
+    for (const row of rows) {
+      const key = `${row.childTable}.${row.constraintName}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          childTable: row.childTable,
+          childColumn: row.childColumn,
+          childColumns: [],
+          parentTable: row.parentTable,
+          parentColumn: row.parentColumn,
+          parentColumns: [],
+          constraintName: row.constraintName,
+        };
+      }
+
+      grouped[key].childColumns.push(row.childColumn);
+      grouped[key].parentColumns.push(row.parentColumn);
+    }
+
+    return Object.values(grouped);
   }
 
   private topologicalSort(tables: string[], foreignKeys: ForeignKeyMeta[], warnings: string[]): string[] {
@@ -786,10 +945,11 @@ export class RelationalSeederTools {
     return requirements;
   }
 
-  private inferSeedRules(
+  private buildInferredSeedRules(
     tables: string[],
     schema: DatabaseSchema,
     customRules: Record<string, SeedRule>,
+    domain: SeedDomain = "generic",
   ): Record<string, SeedRule> {
     const rules: Record<string, SeedRule> = {};
     const uniqueColumns = new Set<string>();
@@ -803,7 +963,11 @@ export class RelationalSeederTools {
     for (const table of tables) {
       for (const column of schema.tables[table].columns) {
         const key = `${table}.${column.columnName}`;
-        rules[key] = customRules[key] || customRules[column.columnName] || this.inferRuleForColumn(table, column, uniqueColumns.has(key));
+        rules[key] =
+          customRules[key] ||
+          customRules[column.columnName] ||
+          this.getDomainRule(domain, table, column) ||
+          this.inferRuleForColumn(table, column, uniqueColumns.has(key));
       }
     }
 
@@ -855,7 +1019,7 @@ export class RelationalSeederTools {
     return {
       foreign_keys: schema.foreignKeys
         .filter((fk) => tableSet.has(fk.childTable))
-        .map((fk) => `${fk.childTable}.${fk.childColumn} -> ${fk.parentTable}.${fk.parentColumn}`),
+        .map((fk) => this.formatForeignKey(fk)),
       unique: schema.uniqueIndexes
         .filter((index) => tableSet.has(index.tableName))
         .map((index) => `${index.tableName}.${index.indexName}(${index.columns.join(",")})`),
@@ -868,6 +1032,7 @@ export class RelationalSeederTools {
   private buildPreview(stored: StoredSeedPlan, maxRows: number, emailDomain: string): Record<string, Record<string, any>[]> {
     const preview: Record<string, Record<string, any>[]> = {};
     const idMap: Record<string, Record<string, any[]>> = {};
+    const tupleMap: KeyTupleMap = {};
 
     for (const table of stored.plan.dependency_order) {
       const requirement = stored.plan.tables_required.find((item) => item.table === table);
@@ -876,6 +1041,7 @@ export class RelationalSeederTools {
         preview: true,
         emailDomain,
         idMap,
+        tupleMap,
       });
     }
 
@@ -893,18 +1059,18 @@ export class RelationalSeederTools {
 
     for (let rowIndex = 0; rowIndex < count; rowIndex++) {
       const row: Record<string, any> = {};
+      const childForeignKeys = stored.schema.foreignKeys.filter((item) => item.childTable === tableName);
+
+      for (const fk of childForeignKeys) {
+        Object.assign(row, this.resolveForeignKeyTuple(stored, fk, rowIndex, context));
+      }
 
       for (const column of table.columns) {
         if (this.shouldSkipColumn(column)) {
           continue;
         }
 
-        const fk = stored.schema.foreignKeys.find(
-          (item) => item.childTable === tableName && item.childColumn === column.columnName,
-        );
-
-        if (fk) {
-          row[column.columnName] = this.resolveForeignKeyValue(stored, fk, rowIndex, context);
+        if (row[column.columnName] !== undefined || this.isForeignKeyColumn(childForeignKeys, column.columnName)) {
           continue;
         }
 
@@ -921,28 +1087,41 @@ export class RelationalSeederTools {
     return rows;
   }
 
-  private resolveForeignKeyValue(
+  private resolveForeignKeyTuple(
     stored: StoredSeedPlan,
     fk: ForeignKeyMeta,
     rowIndex: number,
     context: RowGenerationContext,
-  ): any {
+  ): Record<string, any> {
     const parentRequirement = stored.plan.tables_required.find((item) => item.table === fk.parentTable);
     const parentRows = parentRequirement?.rows_to_create || 0;
+    const resolved: Record<string, any> = {};
 
     if (context.preview) {
-      if (parentRows > 0 && stored.plan.dependency_order.includes(fk.parentTable)) {
-        return `{{${fk.parentTable}[${rowIndex % parentRows}].${fk.parentColumn}}}`;
+      for (let i = 0; i < fk.childColumns.length; i++) {
+        const parentColumn = fk.parentColumns[i];
+        const childColumn = fk.childColumns[i];
+        if (parentRows > 0 && stored.plan.dependency_order.includes(fk.parentTable)) {
+          resolved[childColumn] = `{{${fk.parentTable}[${rowIndex % parentRows}].${parentColumn}}}`;
+        } else {
+          resolved[childColumn] = `{{existing ${fk.parentTable}.${parentColumn}}}`;
+        }
       }
-      return `{{existing ${fk.parentTable}.${fk.parentColumn}}}`;
+      return resolved;
     }
 
-    const values = context.idMap[fk.parentTable]?.[fk.parentColumn] || [];
-    if (values.length === 0) {
-      throw new Error(`No parent IDs available for ${fk.childTable}.${fk.childColumn} -> ${fk.parentTable}.${fk.parentColumn}`);
+    const signature = this.keySignature(fk.parentColumns);
+    const tuples = context.tupleMap[fk.parentTable]?.[signature] || [];
+    if (tuples.length === 0) {
+      throw new Error(`No parent key tuples available for ${this.formatForeignKey(fk)}`);
     }
 
-    return values[rowIndex % values.length];
+    const tuple = tuples[rowIndex % tuples.length];
+    for (let i = 0; i < fk.childColumns.length; i++) {
+      resolved[fk.childColumns[i]] = tuple[fk.parentColumns[i]];
+    }
+
+    return resolved;
   }
 
   private generateValue(
@@ -1010,6 +1189,7 @@ export class RelationalSeederTools {
   private async preloadExistingParentIds(
     stored: StoredSeedPlan,
     idMap: Record<string, Record<string, any[]>>,
+    tupleMap: KeyTupleMap,
     transactionId?: string,
   ): Promise<void> {
     for (const fk of stored.schema.foreignKeys) {
@@ -1017,9 +1197,8 @@ export class RelationalSeederTools {
       if (!childIncluded) continue;
       const parentRequirement = stored.plan.tables_required.find((item) => item.table === fk.parentTable);
       if (parentRequirement && parentRequirement.rows_to_create > 0) continue;
-      const ids = await this.loadExistingIds(fk.parentTable, fk.parentColumn, 1000, transactionId);
-      idMap[fk.parentTable] = idMap[fk.parentTable] || {};
-      idMap[fk.parentTable][fk.parentColumn] = ids;
+      const tuples = await this.loadExistingKeyTuples(fk.parentTable, fk.parentColumns, 1000, transactionId);
+      this.storeTuples(fk.parentTable, fk.parentColumns, tuples, idMap, tupleMap);
     }
   }
 
@@ -1027,23 +1206,50 @@ export class RelationalSeederTools {
     stored: StoredSeedPlan,
     tableName: string,
     idMap: Record<string, Record<string, any[]>>,
+    tupleMap: KeyTupleMap,
     transactionId?: string,
   ): Promise<void> {
     const table = stored.schema.tables[tableName];
-    for (const primaryKey of table.primaryKeys) {
-      if (idMap[tableName]?.[primaryKey]?.length) continue;
-      const ids = await this.loadExistingIds(tableName, primaryKey, 1000, transactionId);
-      idMap[tableName] = idMap[tableName] || {};
-      idMap[tableName][primaryKey] = ids;
+    const primaryColumns = table.primaryKeys.length > 0
+      ? table.primaryKeys
+      : table.autoIncrementColumn
+        ? [table.autoIncrementColumn]
+        : [];
+
+    if (primaryColumns.length > 0) {
+      const signature = this.keySignature(primaryColumns);
+      if (!tupleMap[tableName]?.[signature]?.length) {
+        const tuples = await this.loadExistingKeyTuples(tableName, primaryColumns, 1000, transactionId);
+        this.storeTuples(tableName, primaryColumns, tuples, idMap, tupleMap);
+      }
+    }
+
+    const referencedKeys = stored.schema.foreignKeys
+      .filter((fk) => fk.parentTable === tableName)
+      .map((fk) => fk.parentColumns);
+
+    for (const columns of referencedKeys) {
+      const signature = this.keySignature(columns);
+      if (tupleMap[tableName]?.[signature]?.length) continue;
+      const tuples = await this.loadExistingKeyTuples(tableName, columns, 1000, transactionId);
+      this.storeTuples(tableName, columns, tuples, idMap, tupleMap);
     }
   }
 
-  private async loadExistingIds(tableName: string, columnName: string, limit: number, transactionId?: string): Promise<any[]> {
-    const query = `SELECT ${this.security.escapeIdentifier(columnName)} as id FROM ${this.security.escapeIdentifier(tableName)} WHERE ${this.security.escapeIdentifier(columnName)} IS NOT NULL LIMIT ${limit}`;
+  private async loadExistingKeyTuples(tableName: string, columns: string[], limit: number, transactionId?: string): Promise<KeyTuple[]> {
+    const selectColumns = columns.map((column) => this.security.escapeIdentifier(column)).join(", ");
+    const notNullChecks = columns.map((column) => `${this.security.escapeIdentifier(column)} IS NOT NULL`).join(" AND ");
+    const query = `SELECT ${selectColumns} FROM ${this.security.escapeIdentifier(tableName)} WHERE ${notNullChecks} LIMIT ${limit}`;
     const rows = transactionId
       ? await this.db.executeInTransaction<any[]>(transactionId, query)
       : await this.db.query<any[]>(query);
-    return rows.map((row) => row.id);
+    return rows.map((row) => {
+      const tuple: KeyTuple = {};
+      for (const column of columns) {
+        tuple[column] = row[column];
+      }
+      return tuple;
+    });
   }
 
   private async insertRow(
@@ -1077,37 +1283,62 @@ export class RelationalSeederTools {
     };
   }
 
-  private trackInsertedPrimaryKey(
+  private trackInsertedKeys(
+    stored: StoredSeedPlan,
     table: TableSchema,
     row: Record<string, any>,
     insertId: any,
     idMap: Record<string, Record<string, any[]>>,
+    tupleMap: KeyTupleMap,
     insertedPrimaryKeys: Record<string, any[]>,
   ): void {
-    const primaryKey = table.primaryKeys[0] || table.autoIncrementColumn;
-    if (!primaryKey) return;
+    const resolvedRow = { ...row };
+    if (table.autoIncrementColumn && insertId !== undefined && insertId !== 0) {
+      resolvedRow[table.autoIncrementColumn] = insertId;
+    }
 
-    const value = table.autoIncrementColumn === primaryKey && insertId !== undefined && insertId !== 0
-      ? insertId
-      : row[primaryKey];
+    const primaryColumns = table.primaryKeys.length > 0
+      ? table.primaryKeys
+      : table.autoIncrementColumn
+        ? [table.autoIncrementColumn]
+        : [];
 
-    if (value === undefined || value === null) return;
+    if (primaryColumns.length > 0) {
+      const primaryTuple = this.tupleFromRow(resolvedRow, primaryColumns);
+      if (primaryTuple) {
+        this.storeTuples(table.tableName, primaryColumns, [primaryTuple], idMap, tupleMap);
+        insertedPrimaryKeys[table.tableName] = insertedPrimaryKeys[table.tableName] || [];
+        insertedPrimaryKeys[table.tableName].push(primaryColumns.length === 1 ? primaryTuple[primaryColumns[0]] : primaryTuple);
+      }
+    }
 
-    idMap[table.tableName] = idMap[table.tableName] || {};
-    idMap[table.tableName][primaryKey] = idMap[table.tableName][primaryKey] || [];
-    idMap[table.tableName][primaryKey].push(value);
-    insertedPrimaryKeys[table.tableName] = insertedPrimaryKeys[table.tableName] || [];
-    insertedPrimaryKeys[table.tableName].push(value);
+    const referencedKeySignatures = new Set<string>();
+    for (const fk of stored.schema.foreignKeys.filter((item) => item.parentTable === table.tableName)) {
+      const signature = this.keySignature(fk.parentColumns);
+      if (referencedKeySignatures.has(signature)) continue;
+      referencedKeySignatures.add(signature);
+      const tuple = this.tupleFromRow(resolvedRow, fk.parentColumns);
+      if (tuple) {
+        this.storeTuples(table.tableName, fk.parentColumns, [tuple], idMap, tupleMap);
+      }
+    }
   }
 
   private async countForeignKeyOrphans(fk: ForeignKeyMeta): Promise<number> {
+    const joinConditions = fk.childColumns
+      .map((childColumn, index) => `child_table.${this.security.escapeIdentifier(childColumn)} = parent_table.${this.security.escapeIdentifier(fk.parentColumns[index])}`)
+      .join(" AND ");
+    const childNotNullChecks = fk.childColumns
+      .map((childColumn) => `child_table.${this.security.escapeIdentifier(childColumn)} IS NOT NULL`)
+      .join(" AND ");
+    const parentNullCheck = `parent_table.${this.security.escapeIdentifier(fk.parentColumns[0])} IS NULL`;
     const query = `
       SELECT COUNT(*) as count
       FROM ${this.security.escapeIdentifier(fk.childTable)} child_table
       LEFT JOIN ${this.security.escapeIdentifier(fk.parentTable)} parent_table
-        ON child_table.${this.security.escapeIdentifier(fk.childColumn)} = parent_table.${this.security.escapeIdentifier(fk.parentColumn)}
-      WHERE child_table.${this.security.escapeIdentifier(fk.childColumn)} IS NOT NULL
-        AND parent_table.${this.security.escapeIdentifier(fk.parentColumn)} IS NULL
+        ON ${joinConditions}
+      WHERE ${childNotNullChecks}
+        AND ${parentNullCheck}
     `;
     const rows = await this.db.query<any[]>(query);
     return Number(rows[0]?.count || 0);
@@ -1136,17 +1367,21 @@ export class RelationalSeederTools {
   private async getValidationRowCount(stored: StoredSeedPlan, tableName: string): Promise<any> {
     const requirement = stored.plan.tables_required.find((item) => item.table === tableName);
     const table = stored.schema.tables[tableName];
-    const primaryKey = table.primaryKeys[0] || table.autoIncrementColumn;
+    const keyColumns = table.primaryKeys.length > 0
+      ? table.primaryKeys
+      : table.autoIncrementColumn
+        ? [table.autoIncrementColumn]
+        : [];
     const insertedKeys = stored.lastExecution?.insertedPrimaryKeys[tableName] || [];
 
-    if (primaryKey && insertedKeys.length > 0) {
-      const placeholders = insertedKeys.map(() => "?").join(", ");
-      const query = `SELECT COUNT(*) as count FROM ${this.security.escapeIdentifier(tableName)} WHERE ${this.security.escapeIdentifier(primaryKey)} IN (${placeholders})`;
-      const rows = await this.db.query<any[]>(query, insertedKeys);
+    if (keyColumns.length > 0 && insertedKeys.length > 0) {
+      const { whereClause, params } = this.buildTupleWhereClause(keyColumns, insertedKeys);
+      const query = `SELECT COUNT(*) as count FROM ${this.security.escapeIdentifier(tableName)} WHERE ${whereClause}`;
+      const rows = await this.db.query<any[]>(query, params);
       return {
         expected_inserted: stored.lastExecution?.inserted[tableName] ?? requirement?.rows_to_create ?? 0,
         actual_inserted: Number(rows[0]?.count || 0),
-        primary_key: primaryKey,
+        key_columns: keyColumns,
       };
     }
 
@@ -1192,6 +1427,351 @@ export class RelationalSeederTools {
       values.push(match[1].replace(/''/g, "'"));
     }
     return values;
+  }
+
+  private isForeignKeyColumn(foreignKeys: ForeignKeyMeta[], columnName: string): boolean {
+    return foreignKeys.some((fk) => fk.childColumns.includes(columnName));
+  }
+
+  private keySignature(columns: string[]): string {
+    return columns.join("|");
+  }
+
+  private formatForeignKey(fk: ForeignKeyMeta): string {
+    return `${fk.childTable}(${fk.childColumns.join(",")}) -> ${fk.parentTable}(${fk.parentColumns.join(",")})`;
+  }
+
+  private tupleFromRow(row: Record<string, any>, columns: string[]): KeyTuple | null {
+    const tuple: KeyTuple = {};
+    for (const column of columns) {
+      if (row[column] === undefined || row[column] === null) {
+        return null;
+      }
+      tuple[column] = row[column];
+    }
+    return tuple;
+  }
+
+  private storeTuples(
+    tableName: string,
+    columns: string[],
+    tuples: KeyTuple[],
+    idMap: Record<string, Record<string, any[]>>,
+    tupleMap: KeyTupleMap,
+  ): void {
+    const signature = this.keySignature(columns);
+    tupleMap[tableName] = tupleMap[tableName] || {};
+    tupleMap[tableName][signature] = tupleMap[tableName][signature] || [];
+    idMap[tableName] = idMap[tableName] || {};
+
+    for (const tuple of tuples) {
+      tupleMap[tableName][signature].push(tuple);
+      for (const column of columns) {
+        idMap[tableName][column] = idMap[tableName][column] || [];
+        idMap[tableName][column].push(tuple[column]);
+      }
+    }
+  }
+
+  private buildTupleWhereClause(columns: string[], keys: any[]): { whereClause: string; params: any[] } {
+    const clauses: string[] = [];
+    const params: any[] = [];
+
+    for (const key of keys) {
+      const tuple = typeof key === "object" && key !== null
+        ? key
+        : columns.length === 1
+          ? { [columns[0]]: key }
+          : null;
+
+      if (!tuple) continue;
+
+      const tupleClauses: string[] = [];
+      let valid = true;
+      for (const column of columns) {
+        if (tuple[column] === undefined || tuple[column] === null) {
+          valid = false;
+          break;
+        }
+        tupleClauses.push(`${this.security.escapeIdentifier(column)} = ?`);
+        params.push(tuple[column]);
+      }
+
+      if (valid) {
+        clauses.push(`(${tupleClauses.join(" AND ")})`);
+      }
+    }
+
+    return {
+      whereClause: clauses.length > 0 ? clauses.join(" OR ") : "1=0",
+      params,
+    };
+  }
+
+  private getSelectableTables(schema: DatabaseSchema, requestedTables?: string[], maxTables?: number): string[] {
+    const limit = this.clampNumber(maxTables, 1, 200, 50);
+    if (requestedTables && requestedTables.length > 0) {
+      const tables = Array.from(new Set(requestedTables));
+      for (const table of tables) {
+        this.assertIdentifier(table, "table");
+        if (!schema.tables[table]) {
+          throw new Error(`Table '${table}' does not exist in database '${schema.database}'`);
+        }
+      }
+      return tables.slice(0, limit);
+    }
+
+    return Object.keys(schema.tables).sort().slice(0, limit);
+  }
+
+  private async loadSampleRows(tableName: string, limit: number): Promise<Record<string, any>[]> {
+    const query = `SELECT * FROM ${this.security.escapeIdentifier(tableName)} LIMIT ${limit}`;
+    return await this.db.query<Record<string, any>[]>(query);
+  }
+
+  private refineRulesFromSamples(
+    tableName: string,
+    table: TableSchema,
+    samples: Record<string, any>[],
+    rules: Record<string, SeedRule>,
+    warnings: string[],
+  ): void {
+    if (samples.length === 0) return;
+
+    for (const column of table.columns) {
+      const key = `${tableName}.${column.columnName}`;
+      const values = samples
+        .map((row) => row[column.columnName])
+        .filter((value) => value !== null && value !== undefined);
+
+      if (values.length === 0 || this.isSensitiveColumn(column.columnName)) {
+        continue;
+      }
+
+      const numericValues = values
+        .map((value) => Number(value))
+        .filter((value) => Number.isFinite(value));
+
+      if (numericValues.length === values.length && this.isNumberColumn(column)) {
+        const min = Math.min(...numericValues);
+        const max = Math.max(...numericValues);
+        rules[key] = {
+          ...rules[key],
+          generator: this.isIntegerColumn(column) ? "integer" : "number",
+          min,
+          max: max > min ? max : min + 1,
+          source: "sample_range",
+        };
+        continue;
+      }
+
+      const distinctValues = Array.from(new Set(values.map((value) => String(value)))).slice(0, 20);
+      if (this.canUseChoiceFromSamples(column.columnName, distinctValues)) {
+        rules[key] = {
+          ...rules[key],
+          generator: "choice",
+          values: distinctValues,
+          source: "sample_choice",
+        };
+        continue;
+      }
+
+      const pattern = this.inferPatternFromSamples(column, distinctValues);
+      if (pattern) {
+        rules[key] = {
+          ...rules[key],
+          generator: "pattern",
+          pattern,
+          source: "sample_pattern",
+        };
+      }
+    }
+
+    if (samples.length < 3) {
+      warnings.push(`Only ${samples.length} sample row(s) available for '${tableName}', so inferred rules may be generic.`);
+    }
+  }
+
+  private isSensitiveColumn(columnName: string): boolean {
+    return /(password|token|secret|key|credential|email|phone|mobile|address|name)$/i.test(columnName);
+  }
+
+  private canUseChoiceFromSamples(columnName: string, values: string[]): boolean {
+    if (values.length === 0 || values.length > 10) return false;
+    if (!/(status|state|type|role|category|stage|source|method|channel|priority)$/i.test(columnName)) return false;
+    return values.every((value) => value.length <= 50 && !/@/.test(value));
+  }
+
+  private inferPatternFromSamples(column: ColumnMeta, values: string[]): string | null {
+    if (values.length === 0 || !/(code|sku|number|ref|reference|invoice|receipt)/i.test(column.columnName)) {
+      return null;
+    }
+
+    const prefixMatch = values
+      .map((value) => value.match(/^([A-Za-z]{2,10})[-_]/)?.[1])
+      .find(Boolean);
+
+    if (!prefixMatch) {
+      return null;
+    }
+
+    return `${prefixMatch.toUpperCase()}-####`;
+  }
+
+  private detectDomainFromTables(tables: string[]): SeedDomain {
+    const joined = tables.join("_").toLowerCase();
+    if (/(order|product|cart|payment|shipment|invoice)/.test(joined)) return "ecommerce";
+    if (/(sale|pos|cashier|receipt|shift|register)/.test(joined)) return "pos";
+    if (/(lead|deal|opportunit|contact|account|company|activity)/.test(joined)) return "crm";
+    return "generic";
+  }
+
+  private getDomainRule(domain: SeedDomain, tableName: string, column: ColumnMeta): SeedRule | undefined {
+    const table = tableName.toLowerCase();
+    const name = column.columnName.toLowerCase();
+
+    if (domain === "ecommerce") {
+      if (name.includes("sku")) return { generator: "pattern", pattern: "PRD-####", source: "domain_ecommerce" };
+      if (name.includes("status") && table.includes("order")) return { generator: "choice", values: ["pending", "paid", "processing", "shipped", "cancelled"], source: "domain_ecommerce" };
+      if (name.includes("status") && table.includes("payment")) return { generator: "choice", values: ["pending", "paid", "failed", "refunded"], source: "domain_ecommerce" };
+      if (name.includes("method")) return { generator: "choice", values: ["cash", "bank_transfer", "card", "ewallet"], source: "domain_ecommerce" };
+      if (name.includes("price") || name.includes("total") || name.includes("amount")) return { generator: "number", min: 10000, max: 750000, source: "domain_ecommerce" };
+      if (name.includes("qty") || name.includes("quantity")) return { generator: "integer", min: 1, max: 5, source: "domain_ecommerce" };
+    }
+
+    if (domain === "pos") {
+      if (name.includes("receipt") || name.includes("invoice")) return { generator: "pattern", pattern: "POS-####", source: "domain_pos" };
+      if (name.includes("status")) return { generator: "choice", values: ["open", "paid", "void", "refunded"], source: "domain_pos" };
+      if (name.includes("method")) return { generator: "choice", values: ["cash", "card", "qris", "ewallet"], source: "domain_pos" };
+      if (name.includes("shift")) return { generator: "choice", values: ["morning", "afternoon", "night"], source: "domain_pos" };
+      if (name.includes("price") || name.includes("total") || name.includes("amount")) return { generator: "number", min: 5000, max: 250000, source: "domain_pos" };
+    }
+
+    if (domain === "crm") {
+      if (name.includes("stage")) return { generator: "choice", values: ["new", "qualified", "proposal", "won", "lost"], source: "domain_crm" };
+      if (name.includes("status")) return { generator: "choice", values: ["new", "contacted", "qualified", "inactive"], source: "domain_crm" };
+      if (name.includes("source")) return { generator: "choice", values: ["website", "referral", "event", "ads"], source: "domain_crm" };
+      if (name.includes("company")) return { generator: "string", prefix: "Company", source: "domain_crm" };
+      if (name.includes("amount") || name.includes("value")) return { generator: "number", min: 1000000, max: 100000000, source: "domain_crm" };
+    }
+
+    return undefined;
+  }
+
+  private detectTemplateTables(
+    schema: DatabaseSchema,
+    template: SeedTemplate,
+    include?: string[],
+    exclude?: string[],
+  ): {
+    targetTables: string[];
+    detectedTables: Record<string, string[]>;
+    ignoredTables: string[];
+    warnings: string[];
+  } {
+    const excluded = new Set(exclude || []);
+    for (const table of excluded) {
+      this.assertIdentifier(table, "table");
+    }
+
+    if (include && include.length > 0) {
+      const targetTables = Array.from(new Set(include)).filter((table) => !excluded.has(table));
+      for (const table of targetTables) {
+        this.assertIdentifier(table, "table");
+        if (!schema.tables[table]) {
+          throw new Error(`Included table '${table}' does not exist in database '${schema.database}'`);
+        }
+      }
+      return {
+        targetTables,
+        detectedTables: { included: targetTables },
+        ignoredTables: Array.from(excluded),
+        warnings: [],
+      };
+    }
+
+    const keywords = this.getTemplateKeywords(template);
+    const tables = Object.keys(schema.tables);
+    const detectedTables: Record<string, string[]> = {};
+    const targetSet = new Set<string>();
+    const warnings: string[] = [];
+
+    for (const [role, roleKeywords] of Object.entries(keywords)) {
+      const matches = tables.filter((table) => {
+        const normalized = table.toLowerCase();
+        return !excluded.has(table) && roleKeywords.some((keyword) => normalized.includes(keyword));
+      });
+
+      if (matches.length > 0) {
+        detectedTables[role] = matches;
+        matches.forEach((table) => targetSet.add(table));
+      } else {
+        warnings.push(`No table matched template role '${role}'.`);
+      }
+    }
+
+    return {
+      targetTables: Array.from(targetSet).sort(),
+      detectedTables,
+      ignoredTables: Array.from(excluded),
+      warnings,
+    };
+  }
+
+  private getTemplateKeywords(template: SeedTemplate): Record<string, string[]> {
+    const templates: Record<SeedTemplate, Record<string, string[]>> = {
+      ecommerce: {
+        users: ["user", "customer", "member"],
+        products: ["product", "item", "catalog"],
+        orders: ["order", "cart", "checkout"],
+        order_items: ["order_item", "order_detail", "line_item"],
+        payments: ["payment", "transaction", "invoice"],
+        shipments: ["shipment", "shipping", "delivery"],
+      },
+      pos: {
+        customers: ["customer", "member"],
+        products: ["product", "item", "inventory"],
+        cashiers: ["cashier", "employee", "staff", "user"],
+        sales: ["sale", "transaction", "receipt", "order"],
+        sale_items: ["sale_item", "transaction_item", "receipt_item", "order_item"],
+        payments: ["payment", "tender"],
+        shifts: ["shift", "register"],
+      },
+      crm: {
+        contacts: ["contact", "lead", "customer"],
+        companies: ["company", "account", "organization"],
+        deals: ["deal", "opportunity", "pipeline"],
+        activities: ["activity", "task", "note", "interaction"],
+        users: ["user", "owner", "agent"],
+      },
+    };
+
+    return templates[template];
+  }
+
+  private getScaleRows(template: SeedTemplate, scale: TemplateScale, tables: string[]): Record<string, number> {
+    const baseByScale: Record<TemplateScale, number> = {
+      small: 10,
+      medium: 50,
+      large: 200,
+    };
+    const base = baseByScale[scale];
+    const rows: Record<string, number> = {};
+
+    for (const table of tables) {
+      const normalized = table.toLowerCase();
+      if (/(item|detail|line)/.test(normalized)) rows[table] = Math.min(base * 3, 1000);
+      else if (/(product|inventory|catalog)/.test(normalized)) rows[table] = Math.min(base * 2, 1000);
+      else if (/(payment|shipment|activity|task|note)/.test(normalized)) rows[table] = base;
+      else if (template === "crm" && /(deal|opportunit)/.test(normalized)) rows[table] = base;
+      else rows[table] = base;
+    }
+
+    return rows;
+  }
+
+  private buildTemplateRules(template: SeedTemplate, tables: string[], schema: DatabaseSchema): Record<string, SeedRule> {
+    return this.buildInferredSeedRules(tables, schema, {}, template);
   }
 
   private requirementsToInsertMap(requirements: TableRequirement[]): Record<string, number> {
