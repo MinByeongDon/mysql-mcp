@@ -19,7 +19,7 @@ import { validateToolArguments } from "./tools/toolArgumentValidation.js";
 const permissions = process.env.MCP_PERMISSIONS || process.env.MCP_CONFIG || "";
 const categories = process.env.MCP_CATEGORIES || "";
 const SERVER_NAME = "mysql-mcp-server";
-const SERVER_VERSION = "1.42.2";
+const SERVER_VERSION = "1.43.0";
 
 // Declare the MySQL MCP instance (will be initialized in main())
 let mysqlMCP: MySQLMCP;
@@ -86,7 +86,7 @@ const TOOLS: Tool[] = [
   {
     name: "get_schema_rag_context",
     description:
-      "🎯 AI-OPTIMIZED: Returns ultra-compact schema information (tables, columns, keys, relationships, row estimates) designed specifically for LLM context windows. Use this when you need schema awareness but want to minimize token usage. Configurable limits for tables/columns.",
+      "🎯 AI-OPTIMIZED: Returns ultra-compact schema information (tables, columns, keys, relationships, comments, row estimates) designed specifically for LLM context windows. Use keyword_filter for concept-focused schema discovery.",
     inputSchema: {
       type: "object",
       properties: {
@@ -106,7 +106,129 @@ const TOOLS: Tool[] = [
           type: "boolean",
           description: "Whether to include FK relationships section (default: true)",
         },
+        include_comments: {
+          type: "boolean",
+          description: "Optional: include TABLE_COMMENT and COLUMN_COMMENT metadata (default: false)",
+        },
+        keyword_filter: {
+          type: "string",
+          description: "Optional: only include tables relevant to this keyword, ranked by table names, column names, and comments",
+        },
       },
+    },
+  },
+  {
+    name: "find_tables_by_keyword",
+    description:
+      "🔎 Schema discovery: finds candidate tables for a concept or keyword by searching table names, column names, TABLE_COMMENT, and COLUMN_COMMENT metadata. Use when users ask 'which table stores X?' before reading sample data.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        keyword: {
+          type: "string",
+          description: "Concept or keyword to find, such as survey, invoice, feedback, or customer",
+        },
+        search_in: {
+          type: "string",
+          enum: ["table_names", "column_names", "comments", "all"],
+          description: "Where to search (default: all)",
+        },
+        database: {
+          type: "string",
+          description: "Optional: specific database name",
+        },
+        limit: {
+          type: "number",
+          description: "Optional: maximum number of ranked tables to return (default 20, max 100)",
+        },
+      },
+      required: ["keyword"],
+    },
+  },
+  {
+    name: "search_schema",
+    description:
+      "🧭 Unified schema discovery for natural-language 'where is X?' questions. Searches schema metadata by default and can optionally perform a guarded sample-data scan when mode sample_data is requested.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Concept or keyword to discover",
+        },
+        modes: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["table_names", "column_names", "comments", "sample_data"],
+          },
+          description: "Discovery modes (default: table_names, column_names, comments). sample_data requires read permission.",
+        },
+        max_results: {
+          type: "number",
+          description: "Optional: maximum combined results to return (default 20, max 100)",
+        },
+        database: {
+          type: "string",
+          description: "Optional: specific database name",
+        },
+        tables: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional: restrict sample_data mode to these tables",
+        },
+        columns: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional: restrict sample_data mode to these columns",
+        },
+        max_tables: {
+          type: "number",
+          description: "Optional: max tables scanned in sample_data mode (default 20, max 100)",
+        },
+        limit_per_table: {
+          type: "number",
+          description: "Optional: max matching rows returned per table in sample_data mode (default 5, max 20)",
+        },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "search_data_across_tables",
+    description:
+      "🔍 Guarded read-only keyword scan across text-like table data. Use only when schema metadata does not reveal where a concept is stored; enforces max table and per-table result limits.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        keyword: {
+          type: "string",
+          description: "Keyword to search inside text-like column values",
+        },
+        tables: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional: restrict scan to these tables",
+        },
+        columns: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional: restrict scan to these column names",
+        },
+        database: {
+          type: "string",
+          description: "Optional: specific database name",
+        },
+        max_tables: {
+          type: "number",
+          description: "Optional: maximum tables to scan (default 20, max 100)",
+        },
+        limit_per_table: {
+          type: "number",
+          description: "Optional: maximum rows returned per table (default 5, max 20)",
+        },
+      },
+      required: ["keyword"],
     },
   },
   {
@@ -2465,6 +2587,47 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
             max_tables?: number;
             max_columns?: number;
             include_relationships?: boolean;
+            include_comments?: boolean;
+            keyword_filter?: string;
+          },
+        );
+        break;
+
+      case "find_tables_by_keyword":
+        result = await mysqlMCP.findTablesByKeyword(
+          (args || {}) as {
+            keyword: string;
+            search_in?: "table_names" | "column_names" | "comments" | "all";
+            database?: string;
+            limit?: number;
+          },
+        );
+        break;
+
+      case "search_schema":
+        result = await mysqlMCP.searchSchema(
+          (args || {}) as {
+            query: string;
+            modes?: Array<"table_names" | "column_names" | "comments" | "sample_data">;
+            max_results?: number;
+            database?: string;
+            tables?: string[];
+            columns?: string[];
+            max_tables?: number;
+            limit_per_table?: number;
+          },
+        );
+        break;
+
+      case "search_data_across_tables":
+        result = await mysqlMCP.searchDataAcrossTables(
+          (args || {}) as {
+            keyword: string;
+            tables?: string[];
+            columns?: string[];
+            database?: string;
+            limit_per_table?: number;
+            max_tables?: number;
           },
         );
         break;

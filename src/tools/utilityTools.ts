@@ -407,6 +407,13 @@ export class UtilityTools {
                 "get_database_summary",
                 "get_schema_rag_context",
               ],
+              discover_concept_location: [
+                "find_tables_by_keyword",
+                "search_schema",
+                "read_table_schema on likely matches",
+                "read_records on likely matches for verification",
+                "search_data_across_tables only when the keyword may exist only in row data",
+              ],
               inspect_table: [
                 "read_table_schema",
                 "get_column_statistics",
@@ -435,7 +442,9 @@ export class UtilityTools {
               ],
             },
             selection_rules: [
-              "Use get_schema_rag_context before generating SQL to reduce token usage.",
+              "Use get_schema_rag_context before generating SQL to reduce token usage; add keyword_filter for concept-focused context.",
+              "Use find_tables_by_keyword or search_schema when users ask which table stores a concept.",
+              "Use search_data_across_tables only as a bounded fallback after schema metadata is inconclusive.",
               "Use run_select_query only for SELECT statements.",
               "Use execute_write_query for INSERT and UPDATE. DELETE requires the delete permission.",
               "Use execute_ddl only for CREATE, ALTER, DROP, TRUNCATE, and RENAME.",

@@ -117,6 +117,139 @@ const validateSeedFromTemplateArgs = (args: any): { valid: boolean; errors?: str
   return errors.length ? { valid: false, errors } : { valid: true };
 };
 
+const validateDiscoveryKeyword = (
+  value: any,
+  key: string,
+  errors: string[],
+): void => {
+  if (!value || typeof value !== "string" || !value.trim()) {
+    errors.push(`${key} is required`);
+    return;
+  }
+
+  if (value.length > 255) {
+    errors.push(`${key} must be 255 characters or fewer`);
+    return;
+  }
+
+  const validation = validateValue(value);
+  if (!validation.valid) errors.push(validation.error || `Invalid ${key}`);
+};
+
+const validatePositiveNumber = (
+  value: any,
+  key: string,
+  min: number,
+  max: number,
+  errors: string[],
+): void => {
+  if (value === undefined) return;
+
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric < min || numeric > max) {
+    errors.push(`${key} must be a number between ${min} and ${max}`);
+  }
+};
+
+const validateColumnList = (value: any, key: string, errors: string[]): void => {
+  if (value === undefined) return;
+  if (!Array.isArray(value)) {
+    errors.push(`${key} must be an array`);
+    return;
+  }
+
+  for (const column of value) {
+    const validation = validateTableName(column);
+    if (!validation.valid) {
+      errors.push(`Invalid ${key} column '${column}': ${validation.error}`);
+    }
+  }
+};
+
+const validateFindTablesByKeywordArgs = (args: any): { valid: boolean; errors?: string[] } => {
+  const errors: string[] = [];
+  validateDiscoveryKeyword(args.keyword, "keyword", errors);
+
+  if (args.search_in !== undefined && !["table_names", "column_names", "comments", "all"].includes(args.search_in)) {
+    errors.push("search_in must be one of table_names, column_names, comments, all");
+  }
+
+  if (args.database !== undefined) {
+    const validation = validateValue(args.database);
+    if (!validation.valid) errors.push(validation.error || "Invalid database name");
+  }
+
+  validatePositiveNumber(args.limit, "limit", 1, 100, errors);
+
+  return errors.length ? { valid: false, errors } : { valid: true };
+};
+
+const validateSearchDataAcrossTablesArgs = (args: any): { valid: boolean; errors?: string[] } => {
+  const errors: string[] = [];
+  validateDiscoveryKeyword(args.keyword, "keyword", errors);
+
+  if (args.database !== undefined) {
+    const validation = validateValue(args.database);
+    if (!validation.valid) errors.push(validation.error || "Invalid database name");
+  }
+
+  validateTableList(args.tables, "tables", errors);
+  validateColumnList(args.columns, "columns", errors);
+  validatePositiveNumber(args.max_tables, "max_tables", 1, 100, errors);
+  validatePositiveNumber(args.limit_per_table, "limit_per_table", 1, 20, errors);
+
+  return errors.length ? { valid: false, errors } : { valid: true };
+};
+
+const validateSearchSchemaArgs = (args: any): { valid: boolean; errors?: string[] } => {
+  const errors: string[] = [];
+  validateDiscoveryKeyword(args.query, "query", errors);
+
+  if (args.database !== undefined) {
+    const validation = validateValue(args.database);
+    if (!validation.valid) errors.push(validation.error || "Invalid database name");
+  }
+
+  if (args.modes !== undefined) {
+    if (!Array.isArray(args.modes) || args.modes.length === 0) {
+      errors.push("modes must be a non-empty array");
+    } else {
+      const validModes = ["table_names", "column_names", "comments", "sample_data"];
+      for (const mode of args.modes) {
+        if (!validModes.includes(mode)) {
+          errors.push(`Invalid mode '${mode}'. Must be one of ${validModes.join(", ")}`);
+        }
+      }
+    }
+  }
+
+  validateTableList(args.tables, "tables", errors);
+  validateColumnList(args.columns, "columns", errors);
+  validatePositiveNumber(args.max_results, "max_results", 1, 100, errors);
+  validatePositiveNumber(args.max_tables, "max_tables", 1, 100, errors);
+  validatePositiveNumber(args.limit_per_table, "limit_per_table", 1, 20, errors);
+
+  return errors.length ? { valid: false, errors } : { valid: true };
+};
+
+const validateSchemaRagContextArgs = (args: any): { valid: boolean; errors?: string[] } => {
+  const errors: string[] = [];
+
+  if (args.database !== undefined) {
+    const validation = validateValue(args.database);
+    if (!validation.valid) errors.push(validation.error || "Invalid database name");
+  }
+
+  if (args.keyword_filter !== undefined) {
+    validateDiscoveryKeyword(args.keyword_filter, "keyword_filter", errors);
+  }
+
+  validatePositiveNumber(args.max_tables, "max_tables", 1, 200, errors);
+  validatePositiveNumber(args.max_columns, "max_columns", 1, 200, errors);
+
+  return errors.length ? { valid: false, errors } : { valid: true };
+};
+
 const validatePlanIdArgs = (args: any): { valid: boolean; errors?: string[] } => {
   if (!args.plan_id || typeof args.plan_id !== "string") {
     return { valid: false, errors: ["plan_id is required"] };
@@ -166,9 +299,16 @@ export function validateToolArguments(
         return validateInferSeedRulesArgs(args);
       case "seed_from_template":
         return validateSeedFromTemplateArgs(args);
+      case "find_tables_by_keyword":
+        return validateFindTablesByKeywordArgs(args);
+      case "search_schema":
+        return validateSearchSchemaArgs(args);
+      case "search_data_across_tables":
+        return validateSearchDataAcrossTablesArgs(args);
+      case "get_schema_rag_context":
+        return validateSchemaRagContextArgs(args);
       case "list_tables":
       case "get_schema_erd":
-      case "get_schema_rag_context":
       case "get_database_summary":
         if (args.database !== undefined) {
           const validation = validateValue(args.database);

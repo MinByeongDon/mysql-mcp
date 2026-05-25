@@ -58,6 +58,13 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   getSchemaErd: ToolCategory.LIST,
   get_schema_erd: ToolCategory.LIST,
   getSchemaRagContext: ToolCategory.LIST,
+  findTablesByKeyword: ToolCategory.LIST,
+  find_tables_by_keyword: ToolCategory.LIST,
+  searchSchema: ToolCategory.LIST,
+  search_schema: ToolCategory.LIST,
+  searchSchemaWithSampleData: ToolCategory.READ,
+  searchDataAcrossTables: ToolCategory.READ,
+  search_data_across_tables: ToolCategory.READ,
 
   // CRUD tools
   createRecord: ToolCategory.CREATE,
@@ -314,6 +321,13 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   get_schema_erd: DocCategory.ANALYSIS,
   getColumnStatistics: DocCategory.ANALYSIS,
   getSchemaRagContext: DocCategory.ANALYSIS,
+  findTablesByKeyword: DocCategory.ANALYSIS,
+  find_tables_by_keyword: DocCategory.ANALYSIS,
+  searchSchema: DocCategory.ANALYSIS,
+  search_schema: DocCategory.ANALYSIS,
+  searchSchemaWithSampleData: DocCategory.ANALYSIS,
+  searchDataAcrossTables: DocCategory.ANALYSIS,
+  search_data_across_tables: DocCategory.ANALYSIS,
 
   // Full-Text Search
   createFulltextIndex: DocCategory.INDEX_MANAGEMENT,

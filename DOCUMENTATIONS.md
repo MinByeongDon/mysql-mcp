@@ -1,8 +1,8 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-05-11 13:33:42
-**Version:** 1.42.1
-**Total Tools:** 85
+**Last Updated:** 2026-05-25 14:52:30
+**Version:** 1.43.0
+**Total Tools:** 88
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
 
@@ -134,11 +134,14 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `read_table_schema` - Get table structure
 - `get_all_tables_relationships` - Get all FK relationships
 
-### 2. Analysis (4 tools)
+### 2. Analysis (7 tools)
 - `get_database_summary` - Database overview with statistics
 - `get_schema_erd` - Generate Mermaid.js ER diagram
-- `get_schema_rag_context` - Compact schema for LLM context
+- `get_schema_rag_context` - Compact schema for LLM context, with optional comments and keyword filtering
 - `get_column_statistics` - Column data profiling
+- `find_tables_by_keyword` - Ranked schema keyword search across table names, column names, and comments
+- `search_schema` - Unified discovery for “where is X?” questions using schema metadata and optional sample-data search
+- `search_data_across_tables` - Guarded read-only keyword search across text-like data columns
 
 ### 3. Data Operations (7 tools)
 - `create_record` - Insert single record
@@ -270,6 +273,35 @@ await mcp.call("get_database_summary", {
 await mcp.call("get_schema_erd", {});
 ```
 
+### Schema & Data Discovery
+
+Use these tools when users ask natural-language questions like “which table stores survey data?” or “where is customer feedback saved?”:
+
+```javascript
+// Fast metadata search across table names, column names, and comments
+await mcp.call("find_tables_by_keyword", {
+  keyword: "survey",
+  search_in: "all",
+  limit: 20
+});
+
+// Unified discovery with optional guarded sample-data scan
+await mcp.call("search_schema", {
+  query: "survey",
+  modes: ["table_names", "column_names", "comments", "sample_data"],
+  max_results: 20
+});
+
+// Direct bounded data scan when the keyword may only exist in row values
+await mcp.call("search_data_across_tables", {
+  keyword: "survey",
+  max_tables: 20,
+  limit_per_table: 3
+});
+```
+
+`find_tables_by_keyword` requires `list`; `search_data_across_tables` requires `read`; `search_schema` uses `list` and requires `read` only when `sample_data` mode is enabled.
+
 ### Data Operations
 
 Basic CRUD operations:
@@ -326,8 +358,11 @@ The server includes analysis tools for database insights:
 
 - **Database Summary**: Provides readable overviews with statistics
 - **ER Diagram Generation**: Automatic Mermaid.js diagrams
-- **RAG Context**: Compact schema for LLM prompts
+- **RAG Context**: Compact schema for LLM prompts, with optional `TABLE_COMMENT` / `COLUMN_COMMENT` inclusion and keyword filtering
 - **Column Profiling**: Data quality and distribution analysis
+- **Schema Keyword Discovery**: Ranked search for concepts across table names, column names, and metadata comments
+- **Unified Search**: One entry point for schema and bounded sample-data discovery
+- **Guarded Data Search**: Read-only LIKE scans across text-like columns with strict table/result limits
 
 ### Bulk Operations
 

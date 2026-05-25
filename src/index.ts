@@ -233,11 +233,64 @@ export class MySQLMCP {
     return await this.analysisTools.getColumnStatistics(params);
   }
 
+  async findTablesByKeyword(params: {
+    keyword: string;
+    search_in?: "table_names" | "column_names" | "comments" | "all";
+    database?: string;
+    limit?: number;
+  }) {
+    const check = this.checkToolEnabled("findTablesByKeyword");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.analysisTools.findTablesByKeyword(params);
+  }
+
+  async searchSchema(params: {
+    query: string;
+    modes?: Array<"table_names" | "column_names" | "comments" | "sample_data">;
+    max_results?: number;
+    database?: string;
+    tables?: string[];
+    columns?: string[];
+    max_tables?: number;
+    limit_per_table?: number;
+  }) {
+    const check = this.checkToolEnabled("searchSchema");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    if (params?.modes?.includes("sample_data")) {
+      const readCheck = this.checkToolEnabled("searchSchemaWithSampleData");
+      if (!readCheck.enabled) {
+        return { status: "error", error: readCheck.error };
+      }
+    }
+    return await this.analysisTools.searchSchema(params);
+  }
+
+  async searchDataAcrossTables(params: {
+    keyword: string;
+    tables?: string[];
+    columns?: string[];
+    database?: string;
+    limit_per_table?: number;
+    max_tables?: number;
+  }) {
+    const check = this.checkToolEnabled("searchDataAcrossTables");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.analysisTools.searchDataAcrossTables(params);
+  }
+
   async getSchemaRagContext(params: {
     database?: string;
     max_tables?: number;
     max_columns?: number;
     include_relationships?: boolean;
+    include_comments?: boolean;
+    keyword_filter?: string;
   }) {
     const check = this.checkToolEnabled("getSchemaRagContext");
     if (!check.enabled) {

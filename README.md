@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-05-25 12:00:00
+**Last Updated:** 2026-05-25 14:52:30
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -294,7 +294,7 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
 | `constraint_management` | Manage data integrity constraints | `add_check_constraint, add_foreign_key, add_unique_constraint, drop_constraint, drop_foreign_key, list_constraints, list_foreign_keys` |
 | `table_maintenance` | Table optimization, repair, and maintenance | `analyze_table, check_table, flush_table, get_table_size, get_table_status, optimize_table, repair_table, truncate_table` |
 | `query_optimization` | Analyze and optimize SQL queries | `analyze_query, get_optimization_hints` |
-| `analysis` | Data analysis and reporting tools | `get_column_statistics, get_database_summary, get_schema_erd, get_schema_rag_context` |
+| `analysis` | Data analysis, schema discovery, and reporting tools | `find_tables_by_keyword, get_column_statistics, get_database_summary, get_schema_erd, get_schema_rag_context, search_data_across_tables, search_schema` |
 
 <details>
   <summary>Copy/paste list (comma-separated, no spaces)</summary>
@@ -311,7 +311,7 @@ Full category → tool mapping (and examples) lives in **[DOCUMENTATIONS.md → 
 
 ## Available Tools
 
-The server exposes **85 tools** organized into categories (CRUD, seed, schema, and utilities).
+The server exposes **88 tools** organized into categories (CRUD, seed, schema, discovery, and utilities).
 
 - Complete list of tools: **[DOCUMENTATIONS.md → Complete Tools Reference](DOCUMENTATIONS.md#🔧-complete-tools-reference)**
 

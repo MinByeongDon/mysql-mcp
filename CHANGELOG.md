@@ -5,6 +5,15 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.43.0] - 2026-05-25
+
+### Added
+- Added `find_tables_by_keyword`, `search_schema`, and `search_data_across_tables` to help agents answer natural-language schema discovery questions such as “which table stores survey data?”.
+- Added keyword filtering and optional TABLE/COLUMN comments to `get_schema_rag_context`.
+
+### Changed
+- Updated analysis tool totals and version metadata to `1.43.0`.
+
 ## [1.42.2] - 2026-05-25
 
 ### Fixed
