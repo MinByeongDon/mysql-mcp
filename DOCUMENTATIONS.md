@@ -111,8 +111,8 @@ For CSV exports, use `export_table_to_csv` for table-based exports and `export_q
 | `read` | Read data | `read_records`, `run_select_query` |
 | `create` | Insert records and seed data | `create_record`, `bulk_insert`, `execute_seed_plan` |
 | `update` | Update records | `update_record`, `bulk_update` |
-| `delete` | Delete records | `delete_record`, `bulk_delete` |
-| `execute` | Custom SQL | `execute_write_query` |
+| `delete` | Delete records | `delete_record`, `bulk_delete`, DELETE via `execute_write_query` (requires both `execute` and `delete`) |
+| `execute` | Custom SQL (INSERT/UPDATE; not DELETE without `delete`) | `execute_write_query` |
 | `ddl` | Schema changes | `create_table`, `alter_table` |
 | `utility` | Utility operations | `test_connection`, `analyze_table` |
 | `transaction` | Transaction management | `begin_transaction`, `commit_transaction` |
@@ -159,7 +159,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 
 ### 5. Query Management (3 tools)
 - `run_select_query` - Execute SELECT queries
-- `execute_write_query` - Execute INSERT/UPDATE/DELETE
+- `execute_write_query` - Execute INSERT/UPDATE (DELETE requires the `delete` permission)
 - `repair_query` - Diagnose and fix SQL errors
 
 ### 6. Schema Management (4 tools)

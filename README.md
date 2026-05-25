@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-05-11 13:33:42
+**Last Updated:** 2026-05-25 12:00:00
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -263,7 +263,7 @@ Control database access with a **dual-layer filtering system** that provides bot
 | `create` | INSERT new records | Data entry |
 | `update` | UPDATE existing records | Data maintenance |
 | `delete` | DELETE records | Data cleanup |
-| `execute` | Execute custom SQL (DML) + Advanced SQL | Complex operations |
+| `execute` | Execute custom INSERT/UPDATE SQL (DELETE requires `delete` permission too) | Complex write operations |
 | `ddl` | CREATE/ALTER/DROP tables | Schema management |
 | `procedure` | Stored procedures (CREATE/DROP/EXECUTE) | Procedure management |
 | `transaction` | BEGIN, COMMIT, ROLLBACK | ACID operations |

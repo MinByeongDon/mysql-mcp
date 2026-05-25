@@ -5,6 +5,14 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.42.2] - 2026-05-25
+
+### Fixed
+- Blocked DELETE SQL in `execute_write_query` and `execute_in_transaction` unless the `delete` permission is explicitly enabled, closing a bypass where `execute` alone could delete data via custom SQL.
+
+### Changed
+- Clarified tool and permission documentation: `execute` covers INSERT/UPDATE custom SQL; DELETE requires the separate `delete` permission.
+
 ## [1.42.1] - 2026-05-11
 
 ### Changed

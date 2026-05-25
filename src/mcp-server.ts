@@ -19,7 +19,7 @@ import { validateToolArguments } from "./tools/toolArgumentValidation.js";
 const permissions = process.env.MCP_PERMISSIONS || process.env.MCP_CONFIG || "";
 const categories = process.env.MCP_CATEGORIES || "";
 const SERVER_NAME = "mysql-mcp-server";
-const SERVER_VERSION = "1.42.1";
+const SERVER_VERSION = "1.42.2";
 
 // Declare the MySQL MCP instance (will be initialized in main())
 let mysqlMCP: MySQLMCP;
@@ -725,7 +725,7 @@ const TOOLS: Tool[] = [
   {
     name: "run_select_query",
     description:
-      "⚡ PRIMARY TOOL FOR SELECT QUERIES. Executes read-only SELECT statements with parameterization, optimizer hints, query caching, and dry-run mode. Supports complex queries with JOINs, subqueries, and aggregations. ⚠️ ONLY for SELECT - use execute_write_query for INSERT/UPDATE/DELETE, use execute_ddl for CREATE/ALTER/DROP.",
+      "⚡ PRIMARY TOOL FOR SELECT QUERIES. Executes read-only SELECT statements with parameterization, optimizer hints, query caching, and dry-run mode. Supports complex queries with JOINs, subqueries, and aggregations. ⚠️ ONLY for SELECT - use execute_write_query for INSERT/UPDATE, use execute_ddl for CREATE/ALTER/DROP.",
     inputSchema: {
       type: "object",
       properties: {
@@ -794,14 +794,14 @@ const TOOLS: Tool[] = [
   {
     name: "execute_write_query",
     description:
-      '⚡ PRIMARY TOOL FOR INSERT/UPDATE/DELETE QUERIES. Executes data modification statements with parameterization support. Returns affected row count and execution details. ⚠️ NOT for SELECT (use run_select_query), NOT for DDL (use execute_ddl for CREATE/ALTER/DROP/TRUNCATE/RENAME).',
+      '⚡ PRIMARY TOOL FOR INSERT/UPDATE QUERIES. Executes data modification statements with parameterization support. Returns affected row count and execution details. DELETE SQL requires the separate "delete" permission in addition to "execute". ⚠️ NOT for SELECT (use run_select_query), NOT for DDL (use execute_ddl for CREATE/ALTER/DROP/TRUNCATE/RENAME).',
     inputSchema: {
       type: "object",
       properties: {
         query: {
           type: "string",
           description:
-            "SQL query to execute (INSERT, UPDATE, DELETE, or DDL if permitted)",
+            "SQL query to execute (INSERT or UPDATE; DELETE requires the delete permission)",
         },
         params: {
           type: "array",

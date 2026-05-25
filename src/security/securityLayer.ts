@@ -321,6 +321,18 @@ export class SecurityLayer {
             };
           }
         }
+
+        // DELETE requires explicit delete permission (execute alone is not sufficient)
+        if (type === "DELETE") {
+          if (!this.featureConfig.isCategoryEnabled(ToolCategory.DELETE)) {
+            return {
+              valid: false,
+              error:
+                "DELETE operation requires 'delete' permission. Add 'delete' to your permissions configuration, or use delete_record / bulk_delete.",
+            };
+          }
+        }
+
         return { valid: true, queryType: type };
       }
     }

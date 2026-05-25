@@ -437,7 +437,7 @@ export class UtilityTools {
             selection_rules: [
               "Use get_schema_rag_context before generating SQL to reduce token usage.",
               "Use run_select_query only for SELECT statements.",
-              "Use execute_write_query for INSERT, UPDATE, and DELETE.",
+              "Use execute_write_query for INSERT and UPDATE. DELETE requires the delete permission.",
               "Use execute_ddl only for CREATE, ALTER, DROP, TRUNCATE, and RENAME.",
               "Use seed_operations for relational dummy data instead of manually chaining bulk_insert across foreign keys.",
               "Prefer structured tools over raw SQL when possible.",
