@@ -72,7 +72,7 @@ if (!mysqlUrl) {
     "  constraint_management, table_maintenance, query_optimization,",
   );
   console.error(
-    "  analysis",
+    "  analysis, seed_operations",
   );
   console.error("");
   console.error("Filtering Logic:");

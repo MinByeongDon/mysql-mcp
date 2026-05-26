@@ -16,6 +16,7 @@ import { AiTools } from "./tools/aiTools";
 import { MacroTools } from "./tools/macroTools";
 import { SmartQueryBuilderTools } from "./tools/smartQueryBuilderTools";
 import { FulltextSearchTools } from "./tools/fulltextSearchTools";
+import { RelationalSeederTools } from "./tools/relationalSeederTools";
 import SecurityLayer from "./security/securityLayer";
 import DatabaseConnection from "./db/connection";
 import { FeatureConfig } from "./config/featureConfig";
@@ -43,6 +44,7 @@ export class MySQLMCP {
   private macroTools: MacroTools;
   private smartQueryBuilderTools: SmartQueryBuilderTools;
   private fulltextSearchTools: FulltextSearchTools;
+  private relationalSeederTools: RelationalSeederTools;
   private security: SecurityLayer;
   private featureConfig: FeatureConfig;
 
@@ -67,6 +69,7 @@ export class MySQLMCP {
     this.macroTools = new MacroTools(this.security);
     this.smartQueryBuilderTools = new SmartQueryBuilderTools(this.security);
     this.fulltextSearchTools = new FulltextSearchTools(this.security);
+    this.relationalSeederTools = new RelationalSeederTools(this.security);
   }
 
   // Helper method to check if tool is enabled
@@ -187,7 +190,7 @@ export class MySQLMCP {
     }
 
     // Additional security check
-    if (!this.security.isReadOnlyQuery(params.query)) {
+    if (!this.security.isReadOnlyQuery(params.query, this.security.hasExecutePermission())) {
       return {
         status: "error",
         error:
@@ -230,11 +233,64 @@ export class MySQLMCP {
     return await this.analysisTools.getColumnStatistics(params);
   }
 
+  async findTablesByKeyword(params: {
+    keyword: string;
+    search_in?: "table_names" | "column_names" | "comments" | "all";
+    database?: string;
+    limit?: number;
+  }) {
+    const check = this.checkToolEnabled("findTablesByKeyword");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.analysisTools.findTablesByKeyword(params);
+  }
+
+  async searchSchema(params: {
+    query: string;
+    modes?: Array<"table_names" | "column_names" | "comments" | "sample_data">;
+    max_results?: number;
+    database?: string;
+    tables?: string[];
+    columns?: string[];
+    max_tables?: number;
+    limit_per_table?: number;
+  }) {
+    const check = this.checkToolEnabled("searchSchema");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    if (params?.modes?.includes("sample_data")) {
+      const readCheck = this.checkToolEnabled("searchSchemaWithSampleData");
+      if (!readCheck.enabled) {
+        return { status: "error", error: readCheck.error };
+      }
+    }
+    return await this.analysisTools.searchSchema(params);
+  }
+
+  async searchDataAcrossTables(params: {
+    keyword: string;
+    tables?: string[];
+    columns?: string[];
+    database?: string;
+    limit_per_table?: number;
+    max_tables?: number;
+  }) {
+    const check = this.checkToolEnabled("searchDataAcrossTables");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.analysisTools.searchDataAcrossTables(params);
+  }
+
   async getSchemaRagContext(params: {
     database?: string;
     max_tables?: number;
     max_columns?: number;
     include_relationships?: boolean;
+    include_comments?: boolean;
+    keyword_filter?: string;
   }) {
     const check = this.checkToolEnabled("getSchemaRagContext");
     if (!check.enabled) {
@@ -317,12 +373,24 @@ export class MySQLMCP {
     return await this.utilityTools.readChangelog(params);
   }
 
-  async listAllTools() {
+  async listAllTools(params?: {
+    tools?: Array<{
+      name: string;
+      description?: string;
+      inputSchema?: any;
+      input_schema?: any;
+      output_schema?: any;
+    }>;
+    enabledToolNames?: string[];
+    accessProfile?: any;
+    serverName?: string;
+    serverVersion?: string;
+  }) {
     const check = this.checkToolEnabled("list_all_tools");
     if (!check.enabled) {
       return { status: "error", error: check.error };
     }
-    return await this.utilityTools.listAllTools();
+    return await this.utilityTools.listAllTools(params);
   }
 
   // Transaction Tools
@@ -363,7 +431,7 @@ export class MySQLMCP {
     query: string;
     params?: any[];
   }) {
-    const check = this.checkToolEnabled("executeWriteQuery"); // Use executeWriteQuery permission for transaction queries
+    const check = this.checkToolEnabled("executeInTransaction");
     if (!check.enabled) {
       return { status: "error", error: check.error };
     }
@@ -456,6 +524,18 @@ export class MySQLMCP {
       return { status: "error", error: check.error };
     }
     return await this.dataExportTools.exportTableToCSV(params);
+  }
+
+  async exportQueryToCSV(params: {
+    query: string;
+    params?: any[];
+    include_headers?: boolean;
+  }) {
+    const check = this.checkToolEnabled("exportQueryToCSV");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.dataExportTools.exportQueryToCSV(params);
   }
 
   // AI Productivity Tools
@@ -558,6 +638,55 @@ export class MySQLMCP {
       return { status: "error", error: check.error };
     }
     return this.crudTools.bulkDelete(params);
+  }
+
+  // Relational Data Seeder Tools
+  async planSeedData(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("planSeedData");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.planSeedData(params);
+  }
+
+  async generateSeedPreview(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("generateSeedPreview");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.generateSeedPreview(params);
+  }
+
+  async executeSeedPlan(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("executeSeedPlan");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.executeSeedPlan(params);
+  }
+
+  async validateSeedIntegrity(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("validateSeedIntegrity");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.validateSeedIntegrity(params);
+  }
+
+  async inferSeedRules(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("inferSeedRules");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.inferSeedRules(params);
+  }
+
+  async seedFromTemplate(params: any): Promise<{ status: string; data?: any; error?: string }> {
+    const check = this.checkToolEnabled("seedFromTemplate");
+    if (!check.enabled) {
+      return { status: "error", error: check.error };
+    }
+    return await this.relationalSeederTools.seedFromTemplate(params);
   }
 
   // Close database connection

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import fs from "fs";
+import path from "path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -16,6 +18,8 @@ import { validateToolArguments } from "./tools/toolArgumentValidation.js";
 // Layer 2 (Categories): MCP_CATEGORIES (optional, for fine-grained control)
 const permissions = process.env.MCP_PERMISSIONS || process.env.MCP_CONFIG || "";
 const categories = process.env.MCP_CATEGORIES || "";
+const SERVER_NAME = "mysql-mcp-server";
+const SERVER_VERSION = "1.43.0";
 
 // Declare the MySQL MCP instance (will be initialized in main())
 let mysqlMCP: MySQLMCP;
@@ -82,7 +86,7 @@ const TOOLS: Tool[] = [
   {
     name: "get_schema_rag_context",
     description:
-      "🎯 AI-OPTIMIZED: Returns ultra-compact schema information (tables, columns, keys, relationships, row estimates) designed specifically for LLM context windows. Use this when you need schema awareness but want to minimize token usage. Configurable limits for tables/columns.",
+      "🎯 AI-OPTIMIZED: Returns ultra-compact schema information (tables, columns, keys, relationships, comments, row estimates) designed specifically for LLM context windows. Use keyword_filter for concept-focused schema discovery.",
     inputSchema: {
       type: "object",
       properties: {
@@ -102,7 +106,129 @@ const TOOLS: Tool[] = [
           type: "boolean",
           description: "Whether to include FK relationships section (default: true)",
         },
+        include_comments: {
+          type: "boolean",
+          description: "Optional: include TABLE_COMMENT and COLUMN_COMMENT metadata (default: false)",
+        },
+        keyword_filter: {
+          type: "string",
+          description: "Optional: only include tables relevant to this keyword, ranked by table names, column names, and comments",
+        },
       },
+    },
+  },
+  {
+    name: "find_tables_by_keyword",
+    description:
+      "🔎 Schema discovery: finds candidate tables for a concept or keyword by searching table names, column names, TABLE_COMMENT, and COLUMN_COMMENT metadata. Use when users ask 'which table stores X?' before reading sample data.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        keyword: {
+          type: "string",
+          description: "Concept or keyword to find, such as survey, invoice, feedback, or customer",
+        },
+        search_in: {
+          type: "string",
+          enum: ["table_names", "column_names", "comments", "all"],
+          description: "Where to search (default: all)",
+        },
+        database: {
+          type: "string",
+          description: "Optional: specific database name",
+        },
+        limit: {
+          type: "number",
+          description: "Optional: maximum number of ranked tables to return (default 20, max 100)",
+        },
+      },
+      required: ["keyword"],
+    },
+  },
+  {
+    name: "search_schema",
+    description:
+      "🧭 Unified schema discovery for natural-language 'where is X?' questions. Searches schema metadata by default and can optionally perform a guarded sample-data scan when mode sample_data is requested.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Concept or keyword to discover",
+        },
+        modes: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["table_names", "column_names", "comments", "sample_data"],
+          },
+          description: "Discovery modes (default: table_names, column_names, comments). sample_data requires read permission.",
+        },
+        max_results: {
+          type: "number",
+          description: "Optional: maximum combined results to return (default 20, max 100)",
+        },
+        database: {
+          type: "string",
+          description: "Optional: specific database name",
+        },
+        tables: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional: restrict sample_data mode to these tables",
+        },
+        columns: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional: restrict sample_data mode to these columns",
+        },
+        max_tables: {
+          type: "number",
+          description: "Optional: max tables scanned in sample_data mode (default 20, max 100)",
+        },
+        limit_per_table: {
+          type: "number",
+          description: "Optional: max matching rows returned per table in sample_data mode (default 5, max 20)",
+        },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "search_data_across_tables",
+    description:
+      "🔍 Guarded read-only keyword scan across text-like table data. Use only when schema metadata does not reveal where a concept is stored; enforces max table and per-table result limits.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        keyword: {
+          type: "string",
+          description: "Keyword to search inside text-like column values",
+        },
+        tables: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional: restrict scan to these tables",
+        },
+        columns: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional: restrict scan to these column names",
+        },
+        database: {
+          type: "string",
+          description: "Optional: specific database name",
+        },
+        max_tables: {
+          type: "number",
+          description: "Optional: maximum tables to scan (default 20, max 100)",
+        },
+        limit_per_table: {
+          type: "number",
+          description: "Optional: maximum rows returned per table (default 5, max 20)",
+        },
+      },
+      required: ["keyword"],
     },
   },
   {
@@ -426,9 +552,302 @@ const TOOLS: Tool[] = [
     },
   },
   {
+    name: "plan_seed_data",
+    description:
+      "🌱 RELATIONAL SEEDER: Analyzes target tables, foreign keys, constraints, and row counts to build a safe parent-first seed plan. Use this before generating preview or inserting dummy relational data.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        database: {
+          type: "string",
+          description: "Optional: specific connected database name",
+        },
+        target_tables: {
+          type: "array",
+          description: "Target tables to seed",
+          minItems: 1,
+          items: { type: "string" },
+        },
+        rows_per_table: {
+          oneOf: [
+            { type: "number", minimum: 0 },
+            { type: "object", additionalProperties: { type: "number", minimum: 0 } },
+          ],
+          description: "Rows to create for target tables, either a single number or table-to-count map (default: 10)",
+        },
+        include_dependencies: {
+          type: "boolean",
+          description: "Include parent tables required by foreign keys (default: true)",
+        },
+        include_children: {
+          type: "boolean",
+          description: "Include child tables that reference included tables for nested relational seeding (default: false)",
+        },
+        child_rows_per_parent: {
+          type: "number",
+          description: "Rows to create in child tables for each parent row (default: 2)",
+          minimum: 1,
+          maximum: 20,
+        },
+        respect_existing_data: {
+          type: "boolean",
+          description: "Reuse existing parent records when possible instead of creating new parent rows (default: true)",
+        },
+        strategy: {
+          type: "string",
+          enum: ["append"],
+          description: "Seed strategy (currently append)",
+        },
+        random_seed: {
+          type: "number",
+          description: "Deterministic seed for repeatable preview and execution (default: 42)",
+        },
+        max_rows_per_table: {
+          type: "number",
+          description: "Safety cap for generated rows per table (default: 1000)",
+          minimum: 1,
+          maximum: 10000,
+        },
+        max_related_tables: {
+          type: "number",
+          description: "Safety cap for dependency/child expansion (default: 25)",
+          minimum: 1,
+          maximum: 100,
+        },
+        seed_rules: {
+          type: "object",
+          description: "Optional generator overrides keyed by table.column or column name",
+          additionalProperties: true,
+        },
+        require_confirmation: {
+          type: "boolean",
+          description: "Require confirm_token for non-dry-run execution (default: true)",
+        },
+      },
+      required: ["target_tables"],
+    },
+  },
+  {
+    name: "generate_seed_preview",
+    description:
+      "🌱 RELATIONAL SEEDER: Generates deterministic dummy row previews from a seed plan without writing to the database. Shows symbolic foreign-key placeholders for review before execution.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        plan_id: {
+          type: "string",
+          description: "Seed plan ID returned by plan_seed_data",
+        },
+        locale: {
+          type: "string",
+          description: "Optional locale hint for generated values (default: en_US)",
+        },
+        realistic: {
+          type: "boolean",
+          description: "Whether to prefer realistic generated values (default: true)",
+        },
+        max_preview_rows_per_table: {
+          type: "number",
+          description: "Maximum preview rows per table (default: 3)",
+          minimum: 1,
+          maximum: 25,
+        },
+        email_domain: {
+          type: "string",
+          description: "Safe email domain for generated emails (default: example.test)",
+        },
+      },
+      required: ["plan_id"],
+    },
+  },
+  {
+    name: "execute_seed_plan",
+    description:
+      "🌱 RELATIONAL SEEDER: Executes a confirmed seed plan with dry-run enabled by default, production-name guard, transaction rollback on errors, and foreign-key ID resolution.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        plan_id: {
+          type: "string",
+          description: "Seed plan ID returned by plan_seed_data",
+        },
+        dry_run: {
+          type: "boolean",
+          description: "If true, returns execution preview without inserting rows (default: true)",
+        },
+        use_transaction: {
+          type: "boolean",
+          description: "Use a transaction and rollback on error (default: true)",
+        },
+        batch_size: {
+          type: "number",
+          description: "Reserved batch-size hint for large plans (default: 1 for ID-safe inserts)",
+          minimum: 1,
+          maximum: 10000,
+        },
+        on_error: {
+          type: "string",
+          enum: ["rollback", "stop"],
+          description: "Error behavior (default: rollback)",
+        },
+        confirm_token: {
+          type: "string",
+          description: "Confirmation token returned by plan_seed_data; required when dry_run is false",
+        },
+        allow_production: {
+          type: "boolean",
+          description: "Allow writes to production-like database names (default: false)",
+        },
+        email_domain: {
+          type: "string",
+          description: "Safe email domain for generated emails (default: example.test)",
+        },
+      },
+      required: ["plan_id"],
+    },
+  },
+  {
+    name: "validate_seed_integrity",
+    description:
+      "🌱 RELATIONAL SEEDER: Validates seed results with FK orphan checks, required-column checks, unique-collision checks, and inserted row-count checks.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        plan_id: {
+          type: "string",
+          description: "Seed plan ID returned by plan_seed_data",
+        },
+        tables: {
+          type: "array",
+          description: "Optional table subset to validate",
+          items: { type: "string" },
+        },
+        check_foreign_keys: {
+          type: "boolean",
+          description: "Check foreign key integrity (default: true)",
+        },
+        check_orphans: {
+          type: "boolean",
+          description: "Alias for check_foreign_keys",
+        },
+        check_required_columns: {
+          type: "boolean",
+          description: "Check NOT NULL required columns (default: true)",
+        },
+        check_unique_collisions: {
+          type: "boolean",
+          description: "Check unique index collisions (default: true)",
+        },
+        check_row_counts: {
+          type: "boolean",
+          description: "Check inserted row counts when execution metadata is available (default: true)",
+        },
+      },
+      required: ["plan_id"],
+    },
+  },
+  {
+    name: "infer_seed_rules",
+    description:
+      "🌱 ADVANCED SEEDER: Infers safe seed generator rules from schema metadata, sample row patterns, unique constraints, and optional ecommerce/POS/CRM domain presets without returning raw PII samples.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        database: {
+          type: "string",
+          description: "Optional: specific connected database name",
+        },
+        tables: {
+          type: "array",
+          description: "Optional table subset to analyze; defaults to schema tables up to max_tables",
+          items: { type: "string" },
+        },
+        domain: {
+          type: "string",
+          enum: ["auto", "generic", "ecommerce", "pos", "crm"],
+          description: "Optional domain preset for better business-like dummy data (default: auto)",
+        },
+        sample_size: {
+          type: "number",
+          description: "Number of sample rows per table used to infer ranges and enum-like choices (default: 25, max: 100)",
+          minimum: 0,
+          maximum: 100,
+        },
+        max_tables: {
+          type: "number",
+          description: "Maximum number of tables to analyze when tables is omitted (default: 50)",
+          minimum: 1,
+          maximum: 200,
+        },
+      },
+    },
+  },
+  {
+    name: "seed_from_template",
+    description:
+      "🌱 TEMPLATE SEEDER: Creates a plan-first FK-aware seed workflow from ecommerce, POS, or CRM templates. It detects matching tables, applies domain rules, and returns a seed plan for preview/execution.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        database: {
+          type: "string",
+          description: "Optional: specific connected database name",
+        },
+        template: {
+          type: "string",
+          enum: ["ecommerce", "pos", "crm"],
+          description: "Business seed template to apply",
+        },
+        scale: {
+          type: "string",
+          enum: ["small", "medium", "large"],
+          description: "Template size preset (default: small)",
+        },
+        include: {
+          type: "array",
+          description: "Optional concrete table list to seed instead of auto-detected template matches",
+          items: { type: "string" },
+        },
+        exclude: {
+          type: "array",
+          description: "Optional table names to ignore during template matching",
+          items: { type: "string" },
+        },
+        rows_per_table: {
+          oneOf: [
+            { type: "number", minimum: 0 },
+            { type: "object", additionalProperties: { type: "number", minimum: 0 } },
+          ],
+          description: "Optional row-count override for the generated plan",
+        },
+        include_dependencies: {
+          type: "boolean",
+          description: "Include parent tables required by foreign keys (default: true)",
+        },
+        include_children: {
+          type: "boolean",
+          description: "Include child tables that reference included template tables (default: false)",
+        },
+        respect_existing_data: {
+          type: "boolean",
+          description: "Reuse existing parent records when possible instead of creating new parent rows (default: true)",
+        },
+        random_seed: {
+          type: "number",
+          description: "Deterministic seed for repeatable preview and execution",
+        },
+        require_confirmation: {
+          type: "boolean",
+          description: "Require confirm_token for non-dry-run execution (default: true)",
+        },
+      },
+      required: ["template"],
+    },
+  },
+  {
     name: "run_select_query",
     description:
-      "⚡ PRIMARY TOOL FOR SELECT QUERIES. Executes read-only SELECT statements with parameterization, optimizer hints, query caching, and dry-run mode. Supports complex queries with JOINs, subqueries, and aggregations. ⚠️ ONLY for SELECT - use execute_write_query for INSERT/UPDATE/DELETE, use execute_ddl for CREATE/ALTER/DROP.",
+      "⚡ PRIMARY TOOL FOR SELECT QUERIES. Executes read-only SELECT statements with parameterization, optimizer hints, query caching, and dry-run mode. Supports complex queries with JOINs, subqueries, and aggregations. ⚠️ ONLY for SELECT - use execute_write_query for INSERT/UPDATE, use execute_ddl for CREATE/ALTER/DROP.",
     inputSchema: {
       type: "object",
       properties: {
@@ -497,14 +916,14 @@ const TOOLS: Tool[] = [
   {
     name: "execute_write_query",
     description:
-      '⚡ PRIMARY TOOL FOR INSERT/UPDATE/DELETE QUERIES. Executes data modification statements with parameterization support. Returns affected row count and execution details. ⚠️ NOT for SELECT (use run_select_query), NOT for DDL (use execute_ddl for CREATE/ALTER/DROP/TRUNCATE/RENAME).',
+      '⚡ PRIMARY TOOL FOR INSERT/UPDATE QUERIES. Executes data modification statements with parameterization support. Returns affected row count and execution details. DELETE SQL requires the separate "delete" permission in addition to "execute". ⚠️ NOT for SELECT (use run_select_query), NOT for DDL (use execute_ddl for CREATE/ALTER/DROP/TRUNCATE/RENAME).',
     inputSchema: {
       type: "object",
       properties: {
         query: {
           type: "string",
           description:
-            "SQL query to execute (INSERT, UPDATE, DELETE, or DDL if permitted)",
+            "SQL query to execute (INSERT or UPDATE; DELETE requires the delete permission)",
         },
         params: {
           type: "array",
@@ -670,6 +1089,15 @@ const TOOLS: Tool[] = [
   {
     name: "describe_connection",
     description: "Returns current database connection details: host, database name, user, port, and connection status. Use to verify which database you're connected to.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "cursor_execute_request",
+    description:
+      "Cursor compatibility bridge for clients that can call MCP tools but cannot send arguments. Reads .cursor/mysql-mcp-request.json (or MYSQL_MCP_CURSOR_REQUEST_FILE) and dispatches to the requested MySQL MCP tool. The request file supports {\"tool\":\"execute_ddl\",\"arguments\":{\"query\":\"DROP TABLE IF EXISTS t;\"}} or direct SQL with {\"query\":\"...\",\"mode\":\"auto\"}.",
     inputSchema: {
       type: "object",
       properties: {},
@@ -1924,8 +2352,8 @@ const TOOLS: Tool[] = [
 // Create the MCP server
 const server = new Server(
   {
-    name: "mysql-mcp-server",
-    version: "1.40.5",
+    name: SERVER_NAME,
+    version: SERVER_VERSION,
   },
   {
     capabilities: {
@@ -1947,6 +2375,162 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: enabledTools,
   };
 });
+
+type CursorRequestMode = "auto" | "select" | "write" | "ddl";
+
+interface CursorBridgeRequest {
+  tool?: string;
+  toolName?: string;
+  name?: string;
+  arguments?: Record<string, any>;
+  args?: Record<string, any>;
+  query?: string;
+  params?: any[];
+  mode?: CursorRequestMode;
+  dry_run?: boolean;
+}
+
+const TOOL_METHOD_OVERRIDES: Record<string, string> = {
+  get_schema_erd: "getSchemaERD",
+  export_table_to_csv: "exportTableToCSV",
+  export_query_to_csv: "exportQueryToCSV",
+};
+
+const toCamelCase = (value: string): string =>
+  value.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+
+const getRuntimeToolCatalog = () => {
+  const enabledTools = getEnabledTools(mysqlMCP, TOOLS);
+
+  return {
+    tools: TOOLS.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.inputSchema,
+    })),
+    enabledToolNames: enabledTools.map((tool) => tool.name),
+    accessProfile: mysqlMCP.getAccessProfile(),
+    serverName: SERVER_NAME,
+    serverVersion: SERVER_VERSION,
+  };
+};
+
+const getCursorRequestFilePath = (): string => {
+  const configuredPath =
+    process.env.MYSQL_MCP_CURSOR_REQUEST_FILE ||
+    process.env.MCP_MYSQL_REQUEST_FILE ||
+    ".cursor/mysql-mcp-request.json";
+
+  return path.isAbsolute(configuredPath)
+    ? configuredPath
+    : path.resolve(process.cwd(), configuredPath);
+};
+
+const inferSqlToolName = (query: string, mode: CursorRequestMode = "auto"): string => {
+  const upperQuery = query.trim().toUpperCase();
+
+  if (mode === "select") return "run_select_query";
+  if (mode === "write") return "execute_write_query";
+  if (mode === "ddl") return "execute_ddl";
+
+  if (/^(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b/.test(upperQuery)) {
+    return "execute_ddl";
+  }
+
+  if (/^(INSERT|UPDATE|DELETE|REPLACE)\b/.test(upperQuery)) {
+    return "execute_write_query";
+  }
+
+  if (/^(SELECT|WITH)\b/.test(upperQuery)) {
+    return "run_select_query";
+  }
+
+  throw new Error(
+    "Unable to infer SQL tool. Set mode to one of: select, write, ddl.",
+  );
+};
+
+const executeToolByName = async (
+  toolName: string,
+  args: Record<string, any> = {},
+): Promise<any> => {
+  const knownToolNames = new Set(TOOLS.map((tool) => tool.name));
+
+  if (!knownToolNames.has(toolName)) {
+    throw new Error(`Unknown tool for Cursor bridge: ${toolName}`);
+  }
+
+  if (toolName === "cursor_execute_request") {
+    throw new Error("cursor_execute_request cannot dispatch to itself");
+  }
+
+  const validation = validateToolArguments(toolName, args);
+  if (!validation.valid) {
+    throw new Error(
+      `Validation Error: ${validation.errors?.join(", ") || "Invalid arguments"}`,
+    );
+  }
+
+  if (toolName === "list_all_tools") {
+    return await mysqlMCP.listAllTools(getRuntimeToolCatalog());
+  }
+
+  const methodName = TOOL_METHOD_OVERRIDES[toolName] || toCamelCase(toolName);
+  const method = (mysqlMCP as any)[methodName];
+
+  if (typeof method !== "function") {
+    throw new Error(`No handler method found for Cursor bridge tool: ${toolName}`);
+  }
+
+  return await method.call(mysqlMCP, args);
+};
+
+const executeCursorRequest = async (): Promise<any> => {
+  const requestFilePath = getCursorRequestFilePath();
+
+  if (!fs.existsSync(requestFilePath)) {
+    return {
+      status: "error",
+      error:
+        `Cursor request file not found: ${requestFilePath}. ` +
+        'Create it with JSON like {"tool":"execute_ddl","arguments":{"query":"DROP TABLE IF EXISTS spark_processes;"}}',
+    };
+  }
+
+  let request: CursorBridgeRequest;
+  try {
+    request = JSON.parse(fs.readFileSync(requestFilePath, "utf8"));
+  } catch (error: any) {
+    return {
+      status: "error",
+      error: `Failed to read Cursor request file: ${error.message}`,
+    };
+  }
+
+  const requestedTool = request.tool || request.toolName || request.name;
+
+  if (requestedTool) {
+    return await executeToolByName(
+      requestedTool,
+      request.arguments || request.args || {},
+    );
+  }
+
+  if (request.query) {
+    const inferredTool = inferSqlToolName(request.query, request.mode || "auto");
+    return await executeToolByName(inferredTool, {
+      query: request.query,
+      params: request.params,
+      dry_run: request.dry_run,
+    });
+  }
+
+  return {
+    status: "error",
+    error:
+      "Cursor request must contain either tool/toolName/name with arguments, or query with optional mode.",
+  };
+};
 
 // Handle tool call requests
 server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
@@ -2003,6 +2587,47 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
             max_tables?: number;
             max_columns?: number;
             include_relationships?: boolean;
+            include_comments?: boolean;
+            keyword_filter?: string;
+          },
+        );
+        break;
+
+      case "find_tables_by_keyword":
+        result = await mysqlMCP.findTablesByKeyword(
+          (args || {}) as {
+            keyword: string;
+            search_in?: "table_names" | "column_names" | "comments" | "all";
+            database?: string;
+            limit?: number;
+          },
+        );
+        break;
+
+      case "search_schema":
+        result = await mysqlMCP.searchSchema(
+          (args || {}) as {
+            query: string;
+            modes?: Array<"table_names" | "column_names" | "comments" | "sample_data">;
+            max_results?: number;
+            database?: string;
+            tables?: string[];
+            columns?: string[];
+            max_tables?: number;
+            limit_per_table?: number;
+          },
+        );
+        break;
+
+      case "search_data_across_tables":
+        result = await mysqlMCP.searchDataAcrossTables(
+          (args || {}) as {
+            keyword: string;
+            tables?: string[];
+            columns?: string[];
+            database?: string;
+            limit_per_table?: number;
+            max_tables?: number;
           },
         );
         break;
@@ -2091,6 +2716,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
         );
         break;
 
+      case "plan_seed_data":
+        result = await mysqlMCP.planSeedData(args || {});
+        break;
+
+      case "generate_seed_preview":
+        result = await mysqlMCP.generateSeedPreview(args || {});
+        break;
+
+      case "execute_seed_plan":
+        result = await mysqlMCP.executeSeedPlan(args || {});
+        break;
+
+      case "validate_seed_integrity":
+        result = await mysqlMCP.validateSeedIntegrity(args || {});
+        break;
+
+      case "infer_seed_rules":
+        result = await mysqlMCP.inferSeedRules(args || {});
+        break;
+
+      case "seed_from_template":
+        result = await mysqlMCP.seedFromTemplate(args || {});
+        break;
+
       // Query Tools
       case "run_select_query":
         result = await mysqlMCP.runSelectQuery(
@@ -2131,12 +2780,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
         result = await mysqlMCP.describeConnection();
         break;
 
+      case "cursor_execute_request":
+        result = await executeCursorRequest();
+        break;
+
       case "test_connection":
         result = await mysqlMCP.testConnection();
         break;
 
       case "list_all_tools":
-        result = await mysqlMCP.listAllTools();
+        result = await mysqlMCP.listAllTools(getRuntimeToolCatalog());
         break;
 
       case "read_changelog":
@@ -2230,6 +2883,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       // Data Export Tools
       case "export_table_to_csv":
         result = await mysqlMCP.exportTableToCSV((args || {}) as any);
+        break;
+
+      case "export_query_to_csv":
+        result = await mysqlMCP.exportQueryToCSV(
+          (args || {}) as {
+            query: string;
+            params?: any[];
+            include_headers?: boolean;
+          },
+        );
         break;
 
       // Query Optimization Tools

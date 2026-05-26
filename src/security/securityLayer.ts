@@ -321,6 +321,18 @@ export class SecurityLayer {
             };
           }
         }
+
+        // DELETE requires explicit delete permission (execute alone is not sufficient)
+        if (type === "DELETE") {
+          if (!this.featureConfig.isCategoryEnabled(ToolCategory.DELETE)) {
+            return {
+              valid: false,
+              error:
+                "DELETE operation requires 'delete' permission. Add 'delete' to your permissions configuration, or use delete_record / bulk_delete.",
+            };
+          }
+        }
+
         return { valid: true, queryType: type };
       }
     }
@@ -472,14 +484,14 @@ export class SecurityLayer {
   /**
    * Check if a query is a read-only SELECT query or information query (SHOW, DESCRIBE, etc.)
    */
-  isReadOnlyQuery(query: string): boolean {
+  isReadOnlyQuery(query: string, bypassDangerousCheck: boolean = false): boolean {
     // Check if it's an information query first (SHOW, DESCRIBE, EXPLAIN, etc.)
     if (this.isInformationQuery(query)) {
       return true;
     }
 
     // Check if it's a SELECT query
-    const validation = this.validateQuery(query);
+    const validation = this.validateQuery(query, bypassDangerousCheck);
     return validation.valid && validation.queryType === "SELECT";
   }
 

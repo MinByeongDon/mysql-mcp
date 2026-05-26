@@ -4,6 +4,22 @@ import { validateGetTableRelationships, validateGetAllTablesRelationships } from
 import fs from "fs";
 import path from "path";
 
+interface RuntimeToolDefinition {
+  name: string;
+  description?: string;
+  inputSchema?: any;
+  input_schema?: any;
+  output_schema?: any;
+}
+
+interface ListAllToolsOptions {
+  tools?: RuntimeToolDefinition[];
+  enabledToolNames?: string[];
+  accessProfile?: any;
+  serverName?: string;
+  serverVersion?: string;
+}
+
 export class UtilityTools {
   private db: DatabaseConnection;
 
@@ -330,41 +346,114 @@ export class UtilityTools {
   /**
    * Lists all available tools in this MySQL MCP server
    */
-  async listAllTools(): Promise<{
+  async listAllTools(params?: ListAllToolsOptions): Promise<{
     status: string;
     data?: any;
     error?: string;
   }> {
     try {
-      // Read manifest.json to get tool definitions
-      const manifestPath = path.resolve(__dirname, "..", "..", "manifest.json");
-      
-      if (!fs.existsSync(manifestPath)) {
-        return {
-          status: "error",
-          error: "manifest.json not found in project root.",
-        };
+      let source = "runtime";
+      let serverName = params?.serverName || "mysql-mcp-server";
+      let serverVersion = params?.serverVersion || "unknown";
+      let toolDefinitions: RuntimeToolDefinition[] = params?.tools || [];
+
+      if (toolDefinitions.length === 0) {
+        const manifestPath = path.resolve(__dirname, "..", "..", "manifest.json");
+
+        if (!fs.existsSync(manifestPath)) {
+          return {
+            status: "error",
+            error: "Runtime tool catalog was not supplied and manifest.json was not found.",
+          };
+        }
+
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+        source = "manifest_fallback";
+        serverName = manifest.name || serverName;
+        serverVersion = manifest.version || serverVersion;
+        toolDefinitions = manifest.tools || [];
       }
 
-      const manifestContent = fs.readFileSync(manifestPath, "utf-8");
-      const manifest = JSON.parse(manifestContent);
-
-      const tools = manifest.tools.map((tool: any) => ({
+      const enabledToolNames = new Set(params?.enabledToolNames || toolDefinitions.map((tool) => tool.name));
+      const tools = toolDefinitions.map((tool) => ({
         name: tool.name,
         description: tool.description,
-        input_schema: tool.input_schema,
-        output_schema: tool.output_schema
+        enabled: enabledToolNames.has(tool.name),
+        input_schema: tool.inputSchema || tool.input_schema || {},
+        output_schema: tool.output_schema || { type: "object" },
       }));
 
       return {
         status: "success",
         data: {
+          source,
           total_tools: tools.length,
-          server_name: manifest.name,
-          server_version: manifest.version,
-          server_description: manifest.description,
-          tools: tools
-        }
+          enabled_tools: tools.filter((tool) => tool.enabled).length,
+          disabled_tools: tools.filter((tool) => !tool.enabled).length,
+          server_name: serverName,
+          server_version: serverVersion,
+          access_profile: params?.accessProfile,
+          agent_guidance: {
+            recommended_first_calls: [
+              "describe_connection",
+              "list_databases",
+              "list_tables",
+              "get_schema_rag_context",
+            ],
+            workflows: {
+              explore_schema: [
+                "describe_connection",
+                "list_tables",
+                "get_database_summary",
+                "get_schema_rag_context",
+              ],
+              discover_concept_location: [
+                "find_tables_by_keyword",
+                "search_schema",
+                "read_table_schema on likely matches",
+                "read_records on likely matches for verification",
+                "search_data_across_tables only when the keyword may exist only in row data",
+              ],
+              inspect_table: [
+                "read_table_schema",
+                "get_column_statistics",
+                "read_records",
+              ],
+              run_safe_query: [
+                "get_schema_rag_context",
+                "run_select_query with dry_run=true",
+                "run_select_query",
+              ],
+              export_data: [
+                "export_table_to_csv for simple table exports",
+                "export_query_to_csv for SELECT query exports",
+              ],
+              modify_data: [
+                "begin_transaction",
+                "execute_in_transaction",
+                "commit_transaction or rollback_transaction",
+              ],
+              seed_relational_data: [
+                "infer_seed_rules or seed_from_template when domain/sample-based rules are useful",
+                "plan_seed_data",
+                "generate_seed_preview",
+                "execute_seed_plan with dry_run=false and confirm_token after user approval",
+                "validate_seed_integrity",
+              ],
+            },
+            selection_rules: [
+              "Use get_schema_rag_context before generating SQL to reduce token usage; add keyword_filter for concept-focused context.",
+              "Use find_tables_by_keyword or search_schema when users ask which table stores a concept.",
+              "Use search_data_across_tables only as a bounded fallback after schema metadata is inconclusive.",
+              "Use run_select_query only for SELECT statements.",
+              "Use execute_write_query for INSERT and UPDATE. DELETE requires the delete permission.",
+              "Use execute_ddl only for CREATE, ALTER, DROP, TRUNCATE, and RENAME.",
+              "Use seed_operations for relational dummy data instead of manually chaining bulk_insert across foreign keys.",
+              "Prefer structured tools over raw SQL when possible.",
+            ],
+          },
+          tools,
+        },
       };
 
     } catch (error: any) {

@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-04-08 14:30:00
+**Last Updated:** 2026-05-25 14:52:30
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -148,8 +148,8 @@ If you want ready-to-copy snippets per client (Claude Code/Cursor/Windsurf/Cline
         "-y",
         "@berthojoris/mcp-mysql-server",
         "mysql://user:password@localhost:3306/database_name_here",
-        "list,read,utility,create,update,ddl",
-        "database_discovery,crud_operations,custom_queries,schema_management,index_management,constraint_management,table_maintenance,query_optimization,analysis"
+        "list,read,utility,create,update,ddl,transaction",
+        "database_discovery,crud_operations,custom_queries,schema_management,index_management,constraint_management,table_maintenance,query_optimization,analysis,seed_operations"
       ]
     }
   }
@@ -211,6 +211,40 @@ For more client-specific config snippets, see **[DOCUMENTATIONS.md → Setup & C
 
 ---
 
+### Cursor Compatibility Bridge
+
+If a Cursor MCP wrapper can call tools but cannot send `arguments`, use the no-argument `cursor_execute_request` bridge. Create `.cursor/mysql-mcp-request.json` in the workspace, then call `cursor_execute_request`:
+
+```json
+{
+  "tool": "execute_ddl",
+  "arguments": {
+    "query": "DROP TABLE IF EXISTS spark_processes;"
+  }
+}
+```
+
+For direct SQL, the bridge can infer the right SQL tool:
+
+```json
+{
+  "query": "DROP TABLE IF EXISTS spark_processes;",
+  "mode": "auto"
+}
+```
+
+Set `MYSQL_MCP_CURSOR_REQUEST_FILE` to override the request file path.
+
+---
+
+### AI Agent Tool Discovery
+
+For Codex, Claude Code CLI, Cursor, Droid CLI, and other MCP agents, call `list_all_tools` first. It returns the live runtime catalog, enabled/disabled status, active permission/category profile, and recommended workflows for schema exploration, safe SELECT queries, CSV exports, transactions, and data changes.
+
+Use `export_table_to_csv` for table-based exports and `export_query_to_csv` for SELECT query exports.
+
+---
+
 ## Permission System
 
 Control database access with a **dual-layer filtering system** that provides both broad and fine-grained control:
@@ -229,7 +263,7 @@ Control database access with a **dual-layer filtering system** that provides bot
 | `create` | INSERT new records | Data entry |
 | `update` | UPDATE existing records | Data maintenance |
 | `delete` | DELETE records | Data cleanup |
-| `execute` | Execute custom SQL (DML) + Advanced SQL | Complex operations |
+| `execute` | Execute custom INSERT/UPDATE SQL (DELETE requires `delete` permission too) | Complex write operations |
 | `ddl` | CREATE/ALTER/DROP tables | Schema management |
 | `procedure` | Stored procedures (CREATE/DROP/EXECUTE) | Procedure management |
 | `transaction` | BEGIN, COMMIT, ROLLBACK | ACID operations |
@@ -248,9 +282,10 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
 | `database_discovery` | Explore databases, tables, and schema structure | `get_all_tables_relationships, list_databases, list_tables, read_table_schema` |
 | `crud_operations` | Create, read, update, delete operations on data | `create_record, delete_record, read_records, update_record` |
 | `bulk_operations` | High-performance batch processing operations | `bulk_delete, bulk_insert, bulk_update` |
+| `seed_operations` | FK-aware relational dummy data seeding | `execute_seed_plan, generate_seed_preview, infer_seed_rules, plan_seed_data, seed_from_template, validate_seed_integrity` |
 | `custom_queries` | Execute custom SQL queries and advanced operations | `execute_write_query, run_select_query` |
 | `schema_management` | Manage database schema, tables, and structure | `alter_table, create_table, drop_table, execute_ddl` |
-| `utilities` | Database utilities, diagnostics, and helper functions | `describe_connection, export_query_to_csv, export_table_to_csv, list_all_tools, read_changelog, test_connection` |
+| `utilities` | Database utilities, diagnostics, and helper functions | `cursor_execute_request, describe_connection, export_query_to_csv, export_table_to_csv, list_all_tools, read_changelog, test_connection` |
 | `transaction_management` | Handle ACID transactions and rollback operations | `begin_transaction, commit_transaction, execute_in_transaction, get_transaction_status, rollback_transaction` |
 | `stored_procedures` | Create, execute, and manage stored procedures | `create_stored_procedure, drop_stored_procedure, execute_stored_procedure, get_stored_procedure_info, list_stored_procedures, show_create_procedure` |
 | `views_management` | Create and manage database views | `alter_view, create_view, drop_view, get_view_info, list_views, show_create_view` |
@@ -259,13 +294,13 @@ Use documentation categories to fine-tune which tools are exposed (Layer 2):
 | `constraint_management` | Manage data integrity constraints | `add_check_constraint, add_foreign_key, add_unique_constraint, drop_constraint, drop_foreign_key, list_constraints, list_foreign_keys` |
 | `table_maintenance` | Table optimization, repair, and maintenance | `analyze_table, check_table, flush_table, get_table_size, get_table_status, optimize_table, repair_table, truncate_table` |
 | `query_optimization` | Analyze and optimize SQL queries | `analyze_query, get_optimization_hints` |
-| `analysis` | Data analysis and reporting tools | `get_column_statistics, get_database_summary, get_schema_erd, get_schema_rag_context` |
+| `analysis` | Data analysis, schema discovery, and reporting tools | `find_tables_by_keyword, get_column_statistics, get_database_summary, get_schema_erd, get_schema_rag_context, search_data_across_tables, search_schema` |
 
 <details>
   <summary>Copy/paste list (comma-separated, no spaces)</summary>
 
 ```text
-database_discovery,crud_operations,bulk_operations,custom_queries,schema_management,utilities,transaction_management,stored_procedures,views_management,triggers_management,index_management,constraint_management,table_maintenance,query_optimization,analysis
+database_discovery,crud_operations,bulk_operations,seed_operations,custom_queries,schema_management,utilities,transaction_management,stored_procedures,views_management,triggers_management,index_management,constraint_management,table_maintenance,query_optimization,analysis
 ```
 
 </details>
@@ -276,7 +311,7 @@ Full category → tool mapping (and examples) lives in **[DOCUMENTATIONS.md → 
 
 ## Available Tools
 
-The server exposes **62 tools** organized into categories (CRUD, schema, and utilities).
+The server exposes **88 tools** organized into categories (CRUD, seed, schema, discovery, and utilities).
 
 - Complete list of tools: **[DOCUMENTATIONS.md → Complete Tools Reference](DOCUMENTATIONS.md#🔧-complete-tools-reference)**
 
@@ -288,6 +323,7 @@ For comprehensive documentation, see **[DOCUMENTATIONS.md](DOCUMENTATIONS.md)**:
 
 - **DDL Operations** - Create, alter, and drop tables
 - **Data Export Tools** - Export to CSV, JSON, and SQL formats
+- **Relational Data Seeder** - Plan, preview, execute, validate, infer rules, and template FK-aware dummy data
 - **Data Import Tools** - Import from CSV and JSON sources
 - **Data Migration Tools** - Copy, move, clone, compare, and sync data
 - **Schema Versioning** - Version control for database schema changes

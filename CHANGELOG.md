@@ -5,6 +5,70 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.43.0] - 2026-05-25
+
+### Added
+- Added `find_tables_by_keyword`, `search_schema`, and `search_data_across_tables` to help agents answer natural-language schema discovery questions such as “which table stores survey data?”.
+- Added keyword filtering and optional TABLE/COLUMN comments to `get_schema_rag_context`.
+
+### Changed
+- Updated analysis tool totals and version metadata to `1.43.0`.
+
+## [1.42.2] - 2026-05-25
+
+### Fixed
+- Blocked DELETE SQL in `execute_write_query` and `execute_in_transaction` unless the `delete` permission is explicitly enabled, closing a bypass where `execute` alone could delete data via custom SQL.
+
+### Changed
+- Clarified tool and permission documentation: `execute` covers INSERT/UPDATE custom SQL; DELETE requires the separate `delete` permission.
+
+## [1.42.1] - 2026-05-11
+
+### Changed
+- Bumped patch version metadata to `1.42.1`.
+
+## [1.42.0] - 2026-05-11
+
+### Added
+- Added composite FK/PK tuple resolution for relational seeding so multi-column relationships are selected and validated as intact parent key tuples.
+- Added `infer_seed_rules` to infer safe seed generators from schema, samples, unique indexes, and ecommerce/POS/CRM domain presets.
+- Added `seed_from_template` to create plan-first ecommerce, POS, and CRM seed workflows with detected tables and template-scale row counts.
+
+### Changed
+- Updated seed tool count to 6 and total MCP tools to 85.
+
+## [1.41.0] - 2026-05-11
+
+### Added
+- Added `seed_operations` category with `plan_seed_data`, `generate_seed_preview`, `execute_seed_plan`, and `validate_seed_integrity` for FK-aware relational dummy data seeding.
+- Added deterministic seed planning, preview, confirmation token, transaction rollback, production-name guard, and integrity validation support.
+
+### Changed
+- Updated tool totals and version metadata to `1.41.0`.
+
+## [1.40.7] - 2026-05-06
+
+### Added
+- Implemented `export_query_to_csv` end-to-end for SELECT query CSV exports.
+- Enhanced `list_all_tools` with a live runtime tool catalog, enabled/disabled status, access profile, and AI-agent workflow guidance.
+
+### Fixed
+- Fixed `export_query_to_csv` being advertised but failing with `Unknown tool`.
+- Fixed `list_all_tools` returning stale manifest data instead of the active MCP tool catalog.
+- Fixed `execute_in_transaction` permission checks to match its advertised transaction permission.
+- Hardened DDL tools by validating raw DDL statements and checking structured table, column, and index inputs before building SQL.
+- Added argument validation for Cursor bridge dispatches.
+
+## [1.40.6] - 2026-05-04
+
+### Added
+- Added `cursor_execute_request`, a no-argument compatibility bridge for Cursor MCP wrappers that cannot send tool `arguments`.
+- The bridge reads `.cursor/mysql-mcp-request.json` or `MYSQL_MCP_CURSOR_REQUEST_FILE` and dispatches to existing MCP tools or auto-routes SQL to SELECT, write, or DDL execution.
+
+### Changed
+- Updated tool totals in documentation to include the Cursor bridge.
+- Synchronized version metadata to `1.40.6`.
+
 ## [1.40.5] - 2026-04-08
 
 ### Fixed

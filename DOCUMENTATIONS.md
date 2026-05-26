@@ -1,8 +1,8 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-04-08 14:30:00
-**Version:** 1.40.5
-**Total Tools:** 62
+**Last Updated:** 2026-05-25 14:52:30
+**Version:** 1.43.0
+**Total Tools:** 88
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
 
@@ -65,6 +65,42 @@ Configure MySQL MCP with two access-control layers:
 
 ---
 
+### Cursor Compatibility Bridge
+
+Some Cursor MCP wrappers can call a tool by name but cannot pass `arguments`. For that flow, write a request file at `.cursor/mysql-mcp-request.json` and call the no-argument `cursor_execute_request` tool.
+
+Execute any existing MCP tool:
+
+```json
+{
+  "tool": "execute_ddl",
+  "arguments": {
+    "query": "DROP TABLE IF EXISTS spark_processes;"
+  }
+}
+```
+
+Or execute SQL directly with automatic routing:
+
+```json
+{
+  "query": "DROP TABLE IF EXISTS spark_processes;",
+  "mode": "auto"
+}
+```
+
+Supported `mode` values are `auto`, `select`, `write`, and `ddl`. Set `MYSQL_MCP_CURSOR_REQUEST_FILE` to override the request file path.
+
+---
+
+### AI Agent Tool Discovery
+
+Use `list_all_tools` first when connecting from Codex, Claude Code CLI, Cursor, Droid CLI, or other MCP agents. It returns the live runtime catalog from the server, enabled/disabled status for each tool, the active permission/category profile, and recommended workflows for common agent tasks.
+
+For CSV exports, use `export_table_to_csv` for table-based exports and `export_query_to_csv` for SELECT query exports.
+
+---
+
 ## Permission System
 
 ### Available Permissions
@@ -73,10 +109,10 @@ Configure MySQL MCP with two access-control layers:
 |------------|------------|---------------|
 | `list` | List/discover objects | `list_databases`, `list_tables` |
 | `read` | Read data | `read_records`, `run_select_query` |
-| `create` | Insert records | `create_record`, `bulk_insert` |
+| `create` | Insert records and seed data | `create_record`, `bulk_insert`, `execute_seed_plan` |
 | `update` | Update records | `update_record`, `bulk_update` |
-| `delete` | Delete records | `delete_record`, `bulk_delete` |
-| `execute` | Custom SQL | `execute_write_query` |
+| `delete` | Delete records | `delete_record`, `bulk_delete`, DELETE via `execute_write_query` (requires both `execute` and `delete`) |
+| `execute` | Custom SQL (INSERT/UPDATE; not DELETE without `delete`) | `execute_write_query` |
 | `ddl` | Schema changes | `create_table`, `alter_table` |
 | `utility` | Utility operations | `test_connection`, `analyze_table` |
 | `transaction` | Transaction management | `begin_transaction`, `commit_transaction` |
@@ -92,18 +128,20 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 
 ## Tool Categories
 
-### 1. Database Discovery (5 tools)
+### 1. Database Discovery (4 tools)
 - `list_databases` - List all databases
 - `list_tables` - List tables in database
 - `read_table_schema` - Get table structure
 - `get_all_tables_relationships` - Get all FK relationships
-- `list_all_tools` - List available MCP tools
 
-### 2. Analysis (4 tools)
+### 2. Analysis (7 tools)
 - `get_database_summary` - Database overview with statistics
 - `get_schema_erd` - Generate Mermaid.js ER diagram
-- `get_schema_rag_context` - Compact schema for LLM context
+- `get_schema_rag_context` - Compact schema for LLM context, with optional comments and keyword filtering
 - `get_column_statistics` - Column data profiling
+- `find_tables_by_keyword` - Ranked schema keyword search across table names, column names, and comments
+- `search_schema` - Unified discovery for “where is X?” questions using schema metadata and optional sample-data search
+- `search_data_across_tables` - Guarded read-only keyword search across text-like data columns
 
 ### 3. Data Operations (7 tools)
 - `create_record` - Insert single record
@@ -114,18 +152,30 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `bulk_update` - Batch update (performance)
 - `bulk_delete` - Batch delete (performance)
 
-### 4. Query Management (3 tools)
+### 4. Seed Operations (6 tools)
+- `plan_seed_data` - Build FK-aware relational seed plans
+- `generate_seed_preview` - Preview deterministic dummy rows without writing
+- `execute_seed_plan` - Execute confirmed seed plans with transaction and rollback safety
+- `validate_seed_integrity` - Validate row counts, FK orphans, required columns, and unique collisions
+- `infer_seed_rules` - Infer advanced generators from schema, samples, unique indexes, and domain presets
+- `seed_from_template` - Create reusable plan-first seed workflows for ecommerce, POS, and CRM domains
+
+### 5. Query Management (3 tools)
 - `run_select_query` - Execute SELECT queries
-- `execute_write_query` - Execute INSERT/UPDATE/DELETE
+- `execute_write_query` - Execute INSERT/UPDATE (DELETE requires the `delete` permission)
 - `repair_query` - Diagnose and fix SQL errors
 
-### 5. Schema Management (4 tools)
+### 6. Schema Management (4 tools)
 - `create_table` - Create new tables
 - `alter_table` - Modify table structure
 - `drop_table` - Delete tables
 - `execute_ddl` - Execute raw DDL
 
-### 6. Index Management (10 tools)
+### 7. Data Export (2 tools)
+- `export_table_to_csv` - Export table data to CSV
+- `export_query_to_csv` - Export SELECT query results to CSV
+
+### 8. Index Management (10 tools)
 - `list_indexes` - List table indexes
 - `get_index_info` - Get index details
 - `create_index` - Create indexes
@@ -137,7 +187,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `get_fulltext_stats` - Get FULLTEXT index statistics
 - `optimize_fulltext` - Optimize FULLTEXT indexes
 
-### 7. Constraint Management (7 tools)
+### 9. Constraint Management (7 tools)
 - `list_foreign_keys` - List foreign keys
 - `list_constraints` - List all constraints
 - `add_foreign_key` - Add foreign key
@@ -146,7 +196,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_constraint` - Remove constraint
 - `add_check_constraint` - Add check constraint
 
-### 8. Stored Procedures (6 tools)
+### 10. Stored Procedures (6 tools)
 - `list_stored_procedures` - List procedures
 - `get_stored_procedure_info` - Get procedure details
 - `execute_stored_procedure` - Execute procedures
@@ -154,7 +204,7 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_stored_procedure` - Remove procedures
 - `show_create_procedure` - Show CREATE statement
 
-### 9. Views Management (6 tools)
+### 11. Views Management (6 tools)
 - `list_views` - List views
 - `get_view_info` - Get view details
 - `create_view` - Create views
@@ -162,14 +212,14 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `drop_view` - Remove views
 - `show_create_view` - Show CREATE statement
 
-### 10. Triggers Management (5 tools)
+### 12. Triggers Management (5 tools)
 - `list_triggers` - List triggers
 - `get_trigger_info` - Get trigger details
 - `create_trigger` - Create triggers
 - `drop_trigger` - Remove triggers
 - `show_create_trigger` - Show CREATE statement
 
-### 11. Table Maintenance (8 tools)
+### 13. Table Maintenance (8 tools)
 - `analyze_table` - Update statistics
 - `optimize_table` - Reclaim space
 - `check_table` - Check for errors
@@ -179,23 +229,24 @@ Tool enabled = (Has Permission) AND (Has Category OR No categories specified)
 - `flush_table` - Close/reopen table
 - `get_table_size` - Get size information
 
-### 12. Transaction Management (5 tools)
+### 14. Transaction Management (5 tools)
 - `begin_transaction` - Start transaction
 - `commit_transaction` - Commit transaction
 - `rollback_transaction` - Rollback transaction
 - `get_transaction_status` - Check transaction state
 - `execute_in_transaction` - Execute within transaction
 
-### 13. Query Optimization (3 tools)
+### 15. Query Optimization (3 tools)
 - `analyze_query` - Analyze query performance
 - `get_optimization_hints` - Get optimizer hints
 - `repair_query` - Repair broken SQL queries
 
-### 14. Utilities (4 tools)
+### 16. Utilities (5 tools)
 - `test_connection` - Test connectivity
 - `describe_connection` - Connection info
 - `read_changelog` - Read changelog
-- `invalidate_table_cache` - Clear table cache
+- `cursor_execute_request` - Execute a file-backed request for clients that cannot send MCP arguments
+- `list_all_tools` - Runtime tool catalog with agent guidance
 
 ---
 
@@ -221,6 +272,35 @@ await mcp.call("get_database_summary", {
 // Visualize relationships
 await mcp.call("get_schema_erd", {});
 ```
+
+### Schema & Data Discovery
+
+Use these tools when users ask natural-language questions like “which table stores survey data?” or “where is customer feedback saved?”:
+
+```javascript
+// Fast metadata search across table names, column names, and comments
+await mcp.call("find_tables_by_keyword", {
+  keyword: "survey",
+  search_in: "all",
+  limit: 20
+});
+
+// Unified discovery with optional guarded sample-data scan
+await mcp.call("search_schema", {
+  query: "survey",
+  modes: ["table_names", "column_names", "comments", "sample_data"],
+  max_results: 20
+});
+
+// Direct bounded data scan when the keyword may only exist in row values
+await mcp.call("search_data_across_tables", {
+  keyword: "survey",
+  max_tables: 20,
+  limit_per_table: 3
+});
+```
+
+`find_tables_by_keyword` requires `list`; `search_data_across_tables` requires `read`; `search_schema` uses `list` and requires `read` only when `sample_data` mode is enabled.
 
 ### Data Operations
 
@@ -278,8 +358,11 @@ The server includes analysis tools for database insights:
 
 - **Database Summary**: Provides readable overviews with statistics
 - **ER Diagram Generation**: Automatic Mermaid.js diagrams
-- **RAG Context**: Compact schema for LLM prompts
+- **RAG Context**: Compact schema for LLM prompts, with optional `TABLE_COMMENT` / `COLUMN_COMMENT` inclusion and keyword filtering
 - **Column Profiling**: Data quality and distribution analysis
+- **Schema Keyword Discovery**: Ranked search for concepts across table names, column names, and metadata comments
+- **Unified Search**: One entry point for schema and bounded sample-data discovery
+- **Guarded Data Search**: Read-only LIKE scans across text-like columns with strict table/result limits
 
 ### Bulk Operations
 
@@ -288,6 +371,57 @@ For high-performance operations with large datasets:
 - **Bulk Insert**: Handle thousands of records efficiently
 - **Bulk Update**: Update multiple records with different conditions
 - **Bulk Delete**: Delete multiple record sets in batches
+
+### Relational Data Seeder
+
+For dummy data on related tables, use the seed workflow:
+
+```javascript
+const plan = await mcp.call("plan_seed_data", {
+  target_tables: ["orders"],
+  rows_per_table: 20,
+  include_dependencies: true,
+  include_children: true,
+  random_seed: 42
+});
+
+await mcp.call("generate_seed_preview", {
+  plan_id: plan.plan_id,
+  max_preview_rows_per_table: 3
+});
+
+await mcp.call("execute_seed_plan", {
+  plan_id: plan.plan_id,
+  dry_run: false,
+  confirm_token: plan.confirm_token
+});
+
+await mcp.call("validate_seed_integrity", {
+  plan_id: plan.plan_id
+});
+```
+
+`execute_seed_plan` defaults to dry-run, requires confirmation for writes, blocks production-like database names unless explicitly allowed, and uses transaction rollback on errors.
+
+Composite FK/PK support resolves multi-column parent tuples together, so relations such as `(tenant_id, region_id)` or `(tenant_id, region_id, order_id)` are not mixed across different parent rows.
+
+Advanced rule inference and templates:
+
+```javascript
+await mcp.call("infer_seed_rules", {
+  tables: ["orders", "order_items"],
+  domain: "ecommerce",
+  sample_size: 25
+});
+
+await mcp.call("seed_from_template", {
+  template: "ecommerce",
+  scale: "small",
+  random_seed: 42
+});
+```
+
+`seed_from_template` is plan-first and does not write data directly. Review its plan/preview, then execute with `execute_seed_plan`.
 
 ### Transaction Management
 

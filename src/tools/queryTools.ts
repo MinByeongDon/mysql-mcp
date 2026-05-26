@@ -166,7 +166,8 @@ export class QueryTools {
   }
 
   /**
-   * Execute write operations (INSERT, UPDATE, DELETE) with validation
+   * Execute write operations (INSERT, UPDATE) with validation.
+   * DELETE requires the separate delete permission and is validated in the security layer.
    * Note: DDL operations are blocked by the security layer for safety
    */
   async executeWriteQuery(queryParams: { query: string; params?: any[] }): Promise<{

@@ -20,7 +20,7 @@ export enum ToolCategory {
 }
 
 /**
- * Documentation categories from README (13 categories)
+ * Documentation categories from README
  * More intuitive and matches user mental model
  */
 export enum DocCategory {
@@ -39,6 +39,7 @@ export enum DocCategory {
   TABLE_MAINTENANCE = "table_maintenance",
   QUERY_OPTIMIZATION = "query_optimization",
   ANALYSIS = "analysis",
+  SEED_OPERATIONS = "seed_operations",
 }
 
 /**
@@ -49,13 +50,21 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   listDatabases: ToolCategory.LIST,
   listTables: ToolCategory.LIST,
   readTableSchema: ToolCategory.LIST,
-  list_all_tools: ToolCategory.LIST,
+  listAllTools: ToolCategory.UTILITY,
+  list_all_tools: ToolCategory.UTILITY,
   // Analysis tools (added here to group with database tools)
   getDatabaseSummary: ToolCategory.LIST,
   getSchemaERD: ToolCategory.LIST,
   getSchemaErd: ToolCategory.LIST,
   get_schema_erd: ToolCategory.LIST,
   getSchemaRagContext: ToolCategory.LIST,
+  findTablesByKeyword: ToolCategory.LIST,
+  find_tables_by_keyword: ToolCategory.LIST,
+  searchSchema: ToolCategory.LIST,
+  search_schema: ToolCategory.LIST,
+  searchSchemaWithSampleData: ToolCategory.READ,
+  searchDataAcrossTables: ToolCategory.READ,
+  search_data_across_tables: ToolCategory.READ,
 
   // CRUD tools
   createRecord: ToolCategory.CREATE,
@@ -70,6 +79,20 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
   bulkUpdate: ToolCategory.UPDATE,
   bulkDelete: ToolCategory.DELETE,
 
+  // Seed operations
+  planSeedData: ToolCategory.LIST,
+  plan_seed_data: ToolCategory.LIST,
+  generateSeedPreview: ToolCategory.READ,
+  generate_seed_preview: ToolCategory.READ,
+  executeSeedPlan: ToolCategory.CREATE,
+  execute_seed_plan: ToolCategory.CREATE,
+  validateSeedIntegrity: ToolCategory.READ,
+  validate_seed_integrity: ToolCategory.READ,
+  inferSeedRules: ToolCategory.READ,
+  infer_seed_rules: ToolCategory.READ,
+  seedFromTemplate: ToolCategory.LIST,
+  seed_from_template: ToolCategory.LIST,
+
   // Query tools
   runSelectQuery: ToolCategory.READ,
   executeWriteQuery: ToolCategory.EXECUTE,
@@ -82,6 +105,8 @@ export const toolCategoryMap: Record<string, ToolCategory> = {
 
   // Utility tools
   describeConnection: ToolCategory.UTILITY,
+  cursorExecuteRequest: ToolCategory.UTILITY,
+  cursor_execute_request: ToolCategory.UTILITY,
   testConnection: ToolCategory.UTILITY,
   getAllTablesRelationships: ToolCategory.UTILITY,
   exportTableToCSV: ToolCategory.UTILITY,
@@ -186,6 +211,20 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   bulkUpdate: DocCategory.BULK_OPERATIONS,
   bulkDelete: DocCategory.BULK_OPERATIONS,
 
+  // Seed Operations
+  planSeedData: DocCategory.SEED_OPERATIONS,
+  plan_seed_data: DocCategory.SEED_OPERATIONS,
+  generateSeedPreview: DocCategory.SEED_OPERATIONS,
+  generate_seed_preview: DocCategory.SEED_OPERATIONS,
+  executeSeedPlan: DocCategory.SEED_OPERATIONS,
+  execute_seed_plan: DocCategory.SEED_OPERATIONS,
+  validateSeedIntegrity: DocCategory.SEED_OPERATIONS,
+  validate_seed_integrity: DocCategory.SEED_OPERATIONS,
+  inferSeedRules: DocCategory.SEED_OPERATIONS,
+  infer_seed_rules: DocCategory.SEED_OPERATIONS,
+  seedFromTemplate: DocCategory.SEED_OPERATIONS,
+  seed_from_template: DocCategory.SEED_OPERATIONS,
+
   // Custom Queries
   runSelectQuery: DocCategory.CUSTOM_QUERIES,
   executeWriteQuery: DocCategory.CUSTOM_QUERIES,
@@ -199,6 +238,8 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   // Utilities
   testConnection: DocCategory.UTILITIES,
   describeConnection: DocCategory.UTILITIES,
+  cursorExecuteRequest: DocCategory.UTILITIES,
+  cursor_execute_request: DocCategory.UTILITIES,
   exportTableToCSV: DocCategory.UTILITIES,
   exportTableToCsv: DocCategory.UTILITIES,
   export_table_to_csv: DocCategory.UTILITIES,
@@ -206,6 +247,7 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   exportQueryToCsv: DocCategory.UTILITIES,
   export_query_to_csv: DocCategory.UTILITIES,
   read_changelog: DocCategory.UTILITIES,
+  listAllTools: DocCategory.UTILITIES,
   list_all_tools: DocCategory.UTILITIES,
 
   // Transaction Management
@@ -279,6 +321,13 @@ export const toolDocCategoryMap: Record<string, DocCategory> = {
   get_schema_erd: DocCategory.ANALYSIS,
   getColumnStatistics: DocCategory.ANALYSIS,
   getSchemaRagContext: DocCategory.ANALYSIS,
+  findTablesByKeyword: DocCategory.ANALYSIS,
+  find_tables_by_keyword: DocCategory.ANALYSIS,
+  searchSchema: DocCategory.ANALYSIS,
+  search_schema: DocCategory.ANALYSIS,
+  searchSchemaWithSampleData: DocCategory.ANALYSIS,
+  searchDataAcrossTables: DocCategory.ANALYSIS,
+  search_data_across_tables: DocCategory.ANALYSIS,
 
   // Full-Text Search
   createFulltextIndex: DocCategory.INDEX_MANAGEMENT,
@@ -304,11 +353,13 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.TABLE_MAINTENANCE,
     DocCategory.ANALYSIS,
     DocCategory.UTILITIES,
+    DocCategory.SEED_OPERATIONS,
   ],
-  read: [DocCategory.CRUD_OPERATIONS, DocCategory.CUSTOM_QUERIES, DocCategory.ANALYSIS],
+  read: [DocCategory.CRUD_OPERATIONS, DocCategory.CUSTOM_QUERIES, DocCategory.ANALYSIS, DocCategory.SEED_OPERATIONS],
   create: [
     DocCategory.CRUD_OPERATIONS,
     DocCategory.BULK_OPERATIONS,
+    DocCategory.SEED_OPERATIONS,
   ],
   update: [
     DocCategory.CRUD_OPERATIONS,
@@ -332,7 +383,7 @@ const legacyToDocCategoryMap: Record<string, DocCategory[]> = {
     DocCategory.TABLE_MAINTENANCE,
     DocCategory.QUERY_OPTIMIZATION,
   ],
-  transaction: [DocCategory.TRANSACTION_MANAGEMENT],
+  transaction: [DocCategory.TRANSACTION_MANAGEMENT, DocCategory.SEED_OPERATIONS],
   procedure: [DocCategory.STORED_PROCEDURES],
 };
 
