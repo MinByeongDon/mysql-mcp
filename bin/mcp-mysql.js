@@ -95,11 +95,15 @@ try {
   // Remove leading slash from pathname and make database optional
   database = url.pathname.replace(/^\//, "") || null;
 
-  // Extract username and password from auth
-  const auth =
-    url.username && url.password
-      ? { user: url.username, password: url.password }
-      : { user: url.username || "root", password: url.password || "" };
+  // Extract username and password from auth.
+  // Both fields may be URL-encoded (e.g. "@" -> "%40"), so always decode
+  // whatever the URL parser hands us, including when only one side is set.
+  const decodeAuthField = (value) =>
+    value ? decodeURIComponent(value) : value;
+  const auth = {
+    user: decodeAuthField(url.username) || "root",
+    password: decodeAuthField(url.password) || "",
+  };
 
   connectionConfig = {
     host: url.hostname,

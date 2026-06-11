@@ -1,7 +1,7 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-05-25 14:52:30
-**Version:** 1.43.0
+**Last Updated:** 2026-05-26 05:08:25
+**Version:** 1.43.1
 **Total Tools:** 88
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
@@ -46,6 +46,8 @@ Configure MySQL MCP with two access-control layers:
 
 **Layer 1 (Permissions)**: Broad operation control  
 **Layer 2 (Categories)**: Fine-grained tool filtering  
+
+> **Credentials with special characters**: if the username or password in the connection string contains URL-reserved characters (`@`, `:`, `/`, `?`, `#`, `%`, `&`, etc.), URL-encode them — e.g. the password `p@ss:w0rd` becomes `p%40ss%3Aw0rd`, giving `mysql://user:p%40ss%3Aw0rd@host:3306/db`. The server passes both the username and password through `decodeURIComponent()` before connecting, including when only one of the two is set.
 
 ### Environment Variables
 

@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-05-25 14:52:30
+**Last Updated:** 2026-05-26 05:08:25
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -65,6 +65,8 @@ npx @berthojoris/mcp-mysql-server mysql://user:pass@localhost:3306/db "list,read
 npm install -g @berthojoris/mcp-mysql-server
 mcp-mysql mysql://user:pass@localhost:3306/db "list,read,utility"
 ```
+
+> **Credentials with special characters**: if your username or password contains characters that have a special meaning in URLs (`@`, `:`, `/`, `?`, `#`, `%`, `&`, etc.), URL-encode them before putting them in the connection string. For example, the password `p@ss:w0rd` becomes `p%40ss%3Aw0rd`, giving `mysql://user:p%40ss%3Aw0rd@host:3306/db`. The server decodes both the username and password before connecting.
 
 ---
 

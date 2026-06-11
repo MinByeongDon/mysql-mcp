@@ -5,6 +5,16 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.43.1] - 2026-05-26
+
+### Fixed
+- **URL-encoded credentials in MySQL connection strings** (#4): authentication failed when the username or password contained URL-encoded special characters (e.g. `@` → `%40`, `:` → `%3A`).
+  - Both `url.username` and `url.password` are now passed through `decodeURIComponent()` before being handed to the MySQL client.
+  - The decoding is also applied when only one of the two is set (e.g. `mysql://:p%40ss%3Aw0rd@host/db` or `mysql://us%40er@host/db`), which previously bypassed decoding entirely.
+
+### Changed
+- Synchronized version to `1.43.1` across `package.json`, `src/mcp-server.ts`, `DOCUMENTATIONS.md`, and `README.md`.
+
 ## [1.43.0] - 2026-05-25
 
 ### Added
